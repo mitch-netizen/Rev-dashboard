@@ -26,10 +26,18 @@ export function buildLineItems(
 
   if (report.type === "swiftpos") {
     const posMap = new Map(posLocations.map((p) => [p.pos_location_number, p]));
+    const unmapped = report.result.locations
+      .map((loc) => loc.posLocationNumber)
+      .filter((num) => !posMap.has(num));
+    if (unmapped.length > 0) {
+      throw new Error(
+        `SwiftPOS report has location number(s) with no POS mapping configured: ${unmapped.join(", ")}. Fix rev_pos_location_mapping before importing this report — a partial import would silently drop those locations' revenue.`
+      );
+    }
+
     const items: DraftLineItem[] = [];
     for (const loc of report.result.locations) {
-      const mapping = posMap.get(loc.posLocationNumber);
-      if (!mapping) continue; // unmapped POS location — surfaced as a parse warning, not silently guessed
+      const mapping = posMap.get(loc.posLocationNumber)!;
       if (loc.liquorSalesExc !== null && mapping.liquor_line_id) {
         items.push({
           tradeDate: report.result.tradeDate,
@@ -49,6 +57,12 @@ export function buildLineItems(
   }
 
   if (report.type === "netmeter") {
+    if (report.result.endDate && report.result.endDate !== report.result.tradeDate) {
+      throw new Error(
+        `Net Meter report spans multiple days (${report.result.tradeDate} to ${report.result.endDate}) — this is an aggregate over the period, not a single day's figure, and can't be imported as one day's Turnover/Revenue. Upload single-day reports only.`
+      );
+    }
+
     const turnoverId = lineIdByKey.get("gaming_turnover");
     const revenueId = lineIdByKey.get("gaming_revenue");
     const items: DraftLineItem[] = [];

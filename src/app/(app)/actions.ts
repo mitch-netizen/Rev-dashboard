@@ -57,7 +57,14 @@ export async function updateParsedLineItem(itemId: string, correctedValue: numbe
   if (error) throw error;
 }
 
-export async function commitSourceDocument(documentId: string) {
+export async function commitSourceDocument(
+  documentId: string,
+  // Live edits from the review screen, keyed by parsed_line_item id. This is
+  // the source of truth for what to save — it does NOT rely on
+  // updateParsedLineItem's fire-and-forget save having already landed in the
+  // database, which would otherwise race an edit-then-immediately-confirm.
+  corrections: Record<string, number | null> = {}
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,28 +75,32 @@ export async function commitSourceDocument(documentId: string) {
     .from("rev_source_documents")
     .select("id, type, status")
     .eq("id", documentId)
+    .eq("venue_id", VENUE_ID)
     .single();
   if (docError || !doc) throw new Error(docError?.message ?? "Document not found");
   if (doc.status !== "pending_review") throw new Error("Document already reviewed");
 
   const { data: items, error: itemsError } = await supabase
     .from("rev_parsed_line_items")
-    .select("trade_date, revenue_line_id, extracted_value, corrected_value")
+    .select("id, trade_date, revenue_line_id, extracted_value, corrected_value")
     .eq("source_document_id", documentId);
   if (itemsError) throw itemsError;
 
   const source = SOURCE_BY_DOCUMENT_TYPE[doc.type] ?? "manual";
 
-  const rows = (items ?? []).map((item) => ({
-    venue_id: VENUE_ID,
-    trade_date: item.trade_date,
-    revenue_line_id: item.revenue_line_id,
-    value: item.corrected_value ?? item.extracted_value,
-    source,
-    source_document_id: documentId,
-    entered_by: user.id,
-    updated_at: new Date().toISOString(),
-  }));
+  const rows = (items ?? []).map((item) => {
+    const correction = item.id in corrections ? corrections[item.id] : item.corrected_value;
+    return {
+      venue_id: VENUE_ID,
+      trade_date: item.trade_date,
+      revenue_line_id: item.revenue_line_id,
+      value: correction ?? item.extracted_value,
+      source,
+      source_document_id: documentId,
+      entered_by: user.id,
+      updated_at: new Date().toISOString(),
+    };
+  });
 
   const { error: upsertError } = await supabase
     .from("rev_daily_actuals")
@@ -111,7 +122,8 @@ export async function rejectSourceDocument(documentId: string) {
   const { error } = await supabase
     .from("rev_source_documents")
     .update({ status: "rejected" })
-    .eq("id", documentId);
+    .eq("id", documentId)
+    .eq("venue_id", VENUE_ID);
   if (error) throw error;
 
   redirect("/upload");

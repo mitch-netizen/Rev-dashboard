@@ -41,7 +41,15 @@ export async function POST(request: Request) {
       .eq("venue_id", VENUE_ID),
   ]);
 
-  const lineItems = buildLineItems(report, revenueLines ?? [], posLocations ?? []);
+  let lineItems;
+  try {
+    lineItems = buildLineItems(report, revenueLines ?? [], posLocations ?? []);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to map parsed report to revenue lines" },
+      { status: 422 }
+    );
+  }
   if (lineItems.length === 0) {
     return NextResponse.json(
       { error: "Parsed the file but found no revenue lines to import — check the report content" },

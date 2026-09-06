@@ -49,7 +49,7 @@ export default function ReviewTable({
     setError(null);
     startTransition(async () => {
       try {
-        await commitSourceDocument(documentId);
+        await commitSourceDocument(documentId, corrections);
       } catch (err) {
         if (err instanceof Error && err.message !== "NEXT_REDIRECT") {
           setError(err.message);

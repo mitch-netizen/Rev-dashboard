@@ -1,16 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
-import { VENUE_ID, mondayOf, addDays, toIsoDate } from "@/lib/revenue/constants";
+import { VENUE_ID, venueNow, mondayOf, addDays, toIsoDate } from "@/lib/revenue/constants";
 import WeekGrid, { type WeekGridDay, type WeekGridLine } from "./week-grid";
 
 export default async function CurrentWeekPage() {
   const supabase = await createClient();
 
-  const monday = mondayOf(new Date());
+  const monday = mondayOf(venueNow());
   const days: WeekGridDay[] = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(monday, i);
     return {
       date: toIsoDate(d),
-      label: d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" }),
+      // d is a UTC-midnight Date standing in for a plain calendar date, so
+      // format it in UTC too — otherwise the server's own timezone could
+      // shift the displayed day by one.
+      label: d.toLocaleDateString("en-AU", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+      }),
     };
   });
 

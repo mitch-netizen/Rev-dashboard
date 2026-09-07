@@ -6,12 +6,12 @@ import {
   parseNetmeterXlsx,
   parseNetmeterText,
   parseNetmeterPdfPages,
-  type NetmeterParseResult,
+  type NetmeterDayResult,
 } from "./netmeter";
 
 export type DetectedReport =
   | { type: "swiftpos"; result: SwiftposParseResult }
-  | { type: "netmeter"; result: NetmeterParseResult }
+  | { type: "netmeter"; result: NetmeterDayResult[] }
   | { type: "rms"; result: RmsDayResult[] };
 
 export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {

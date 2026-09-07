@@ -57,28 +57,16 @@ export function buildLineItems(
   }
 
   if (report.type === "netmeter") {
-    if (report.result.endDate && report.result.endDate !== report.result.tradeDate) {
-      throw new Error(
-        `Net Meter report spans multiple days (${report.result.tradeDate} to ${report.result.endDate}) — this is an aggregate over the period, not a single day's figure, and can't be imported as one day's Turnover/Revenue. Upload single-day reports only.`
-      );
-    }
-
     const turnoverId = lineIdByKey.get("gaming_turnover");
     const revenueId = lineIdByKey.get("gaming_revenue");
     const items: DraftLineItem[] = [];
-    if (turnoverId) {
-      items.push({
-        tradeDate: report.result.tradeDate,
-        revenueLineId: turnoverId,
-        extractedValue: report.result.turnover,
-      });
-    }
-    if (revenueId) {
-      items.push({
-        tradeDate: report.result.tradeDate,
-        revenueLineId: revenueId,
-        extractedValue: report.result.revenue,
-      });
+    for (const day of report.result) {
+      if (turnoverId) {
+        items.push({ tradeDate: day.date, revenueLineId: turnoverId, extractedValue: day.turnover });
+      }
+      if (revenueId) {
+        items.push({ tradeDate: day.date, revenueLineId: revenueId, extractedValue: day.revenue });
+      }
     }
     return items;
   }

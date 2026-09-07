@@ -21,6 +21,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/upload" className="hover:text-neutral-950 dark:hover:text-white">
                 Upload
               </Link>
+              <Link href="/recovery" className="hover:text-neutral-950 dark:hover:text-white">
+                Recovery
+              </Link>
+              <Link href="/targets" className="hover:text-neutral-950 dark:hover:text-white">
+                Targets
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm text-neutral-500">

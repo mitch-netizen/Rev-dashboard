@@ -1,11 +1,22 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { VENUE_ID, venueNow, mondayOf, addDays, toIsoDate } from "@/lib/revenue/constants";
 import WeekGrid, { type WeekGridDay, type WeekGridLine } from "./week-grid";
 
-export default async function CurrentWeekPage() {
+export default async function CurrentWeekPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
+  const { week } = await searchParams;
   const supabase = await createClient();
 
-  const monday = mondayOf(venueNow());
+  const today = venueNow();
+  const requestedMonday = week && /^\d{4}-\d{2}-\d{2}$/.test(week) ? new Date(`${week}T00:00:00Z`) : today;
+  const monday = mondayOf(requestedMonday);
+  const thisWeekMonday = mondayOf(today);
+  const isCurrentWeek = toIsoDate(monday) === toIsoDate(thisWeekMonday);
+
   const days: WeekGridDay[] = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(monday, i);
     return {
@@ -50,13 +61,37 @@ export default async function CurrentWeekPage() {
   const totalCells = lines.length * days.length;
   const filledCells = Object.keys(actuals).length;
 
+  const prevWeek = toIsoDate(addDays(monday, -7));
+  const nextWeek = toIsoDate(addDays(monday, 7));
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Current Week</h1>
-        <p className="text-sm text-neutral-500">
-          {days[0].label} – {days[6].label} · {filledCells} of {totalCells} figures entered
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">{isCurrentWeek ? "Current Week" : "Week"}</h1>
+          <p className="text-sm text-neutral-500">
+            {days[0].label} – {days[6].label} · {filledCells} of {totalCells} figures entered
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <Link
+            href={`/?week=${prevWeek}`}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            ← Previous week
+          </Link>
+          {!isCurrentWeek && (
+            <Link href="/" className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900">
+              This week
+            </Link>
+          )}
+          <Link
+            href={`/?week=${nextWeek}`}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Next week →
+          </Link>
+        </div>
       </div>
       <WeekGrid days={days} lines={lines} actuals={actuals} />
     </div>

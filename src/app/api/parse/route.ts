@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   try {
     report = await detectAndParse(buffer);
   } catch (err) {
+    console.error(`[parse] detectAndParse failed for "${file.name}":`, err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to parse file" },
       { status: 422 }

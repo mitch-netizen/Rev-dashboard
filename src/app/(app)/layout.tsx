@@ -21,6 +21,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/upload" className="hover:text-neutral-950 dark:hover:text-white">
                 Upload
               </Link>
+              <Link href="/review" className="hover:text-neutral-950 dark:hover:text-white">
+                Review Queue
+              </Link>
               <Link href="/recovery" className="hover:text-neutral-950 dark:hover:text-white">
                 Recovery
               </Link>

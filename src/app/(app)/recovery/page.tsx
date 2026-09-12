@@ -67,8 +67,11 @@ export default async function RecoveryPage({
 
   const hasAnyTargets = (weeklyTargetRows ?? []).length > 0;
 
-  const elapsedDays = days.filter((d) => d.date <= todayIso);
-  const remainingDays = days.filter((d) => d.date > todayIso);
+  // Today's trade isn't closed out yet — its actual won't exist until
+  // tomorrow's report comes in — so it belongs with the days still to be
+  // made up, not with completed days judged against target.
+  const elapsedDays = days.filter((d) => d.date < todayIso);
+  const remainingDays = days.filter((d) => d.date >= todayIso);
 
   function targetFor(areaId: string, dayOfWeek: number) {
     return targetsByAreaDay.get(areaId)?.get(dayOfWeek) ?? 0;

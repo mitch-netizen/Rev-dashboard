@@ -62,10 +62,9 @@ export async function computeRecoveryReport(
   const areas = await fetchAreas(supabase);
 
   const [{ data: weeklyTargetRows }, { data: actualRows }] = await Promise.all([
-    supabase
-      .from("rev_weekly_targets")
-      .select("revenue_line_id, group_id, day_of_week, amount")
-      .eq("week_id", weekId),
+    weekId
+      ? supabase.from("rev_weekly_targets").select("revenue_line_id, group_id, day_of_week, amount").eq("week_id", weekId)
+      : Promise.resolve({ data: [] }),
     supabase
       .from("rev_daily_actuals")
       .select("trade_date, revenue_line_id, value")

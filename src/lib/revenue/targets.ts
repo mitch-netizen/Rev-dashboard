@@ -17,10 +17,16 @@ export interface Area {
 // per the schema's design, that snapshot then never changes even if the
 // standing pattern is edited later. Safe to call on every page load: it's a
 // no-op once a week has targets.
+//
+// Both inserts are RLS-restricted to admin/manager (see the schema migration),
+// but any venue member can read this data — a coordinator (or anyone else who
+// isn't admin/manager) opening a week nobody has seeded yet must not crash the
+// page just because they can't be the one to seed it. Returns null when
+// seeding was blocked so callers can fall back to "no targets yet" instead.
 export async function ensureWeekTargetsSeeded(
   supabase: SupabaseClient,
   weekStartDate: string
-): Promise<string> {
+): Promise<string | null> {
   const { data: existingWeek } = await supabase
     .from("rev_weeks")
     .select("id")
@@ -36,7 +42,7 @@ export async function ensureWeekTargetsSeeded(
       .insert({ venue_id: VENUE_ID, week_start_date: weekStartDate })
       .select("id")
       .single();
-    if (error) throw error;
+    if (error) return null;
     weekId = inserted.id;
   }
 
@@ -62,8 +68,9 @@ export async function ensureWeekTargetsSeeded(
         amount: s.amount,
         source: "standing_pattern" as const,
       }));
-      const { error: insertError } = await supabase.from("rev_weekly_targets").insert(rows);
-      if (insertError) throw insertError;
+      // If this fails on RLS, the week row exists but stays without targets
+      // for this viewer — still returned so actuals-only reads keep working.
+      await supabase.from("rev_weekly_targets").insert(rows);
     }
   }
 

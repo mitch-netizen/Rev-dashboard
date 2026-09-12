@@ -75,6 +75,7 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
   const thisWeekMonday = mondayOf(today);
   const isCurrentWeek = toIsoDate(monday) === toIsoDate(thisWeekMonday);
   const mondayIso = toIsoDate(monday);
+  const todayIso = toIsoDate(today);
   const prevMondayIso = toIsoDate(addDays(monday, -7));
 
   const days: WeeklyReportDay[] = Array.from({ length: 7 }, (_, i) => {
@@ -94,8 +95,10 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
   const areas = await fetchAreas(supabase);
 
   const [{ data: weekRow }, { data: weeklyTargetRows }, { data: actualRows }, { data: prevActualRows }] = await Promise.all([
-    supabase.from("rev_weeks").select("status").eq("id", weekId).single(),
-    supabase.from("rev_weekly_targets").select("revenue_line_id, group_id, day_of_week, amount").eq("week_id", weekId),
+    weekId ? supabase.from("rev_weeks").select("status").eq("id", weekId).single() : Promise.resolve({ data: null }),
+    weekId
+      ? supabase.from("rev_weekly_targets").select("revenue_line_id, group_id, day_of_week, amount").eq("week_id", weekId)
+      : Promise.resolve({ data: [] }),
     supabase
       .from("rev_daily_actuals")
       .select("trade_date, revenue_line_id, value")
@@ -146,6 +149,16 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
     (a): a is Area => a !== undefined
   );
 
+  // "Week to date": for a closed/past week every day is already elapsed, so
+  // this is the full week — but for the current, still-running week it must
+  // exclude days that haven't happened yet (today's trade isn't closed out
+  // until tomorrow, matching the Recovery report's convention). Comparing a
+  // partial-week actual against a full-week target would otherwise mark an
+  // area "Short" purely because the week isn't over.
+  const elapsedDays = days.filter((d) => d.date < todayIso);
+  const elapsedDayOfWeeks = new Set(elapsedDays.map((d) => d.dayOfWeek));
+  const prevElapsedDays = prevDays.filter((d) => elapsedDayOfWeeks.has(d.dayOfWeek));
+
   function sumTarget(areaId: string, dayList: WeeklyReportDay[]) {
     const byDay = targetsByAreaDay.get(areaId);
     if (!byDay) return 0;
@@ -154,15 +167,15 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
 
   const headline: HeadlineRow[] = headlineAreas.map((area) => {
     const hasTarget = targetsByAreaDay.has(area.id);
-    const targetTotal = sumTarget(area.id, days);
-    const weeklyTarget = hasTarget ? (area.isAveraged ? targetTotal / 7 : targetTotal) : null;
+    const targetTotal = sumTarget(area.id, elapsedDays);
+    const weeklyTarget = hasTarget && elapsedDays.length > 0 ? (area.isAveraged ? targetTotal / elapsedDays.length : targetTotal) : null;
 
-    const { total, daysWithValue } = sumAreaActual(area.memberLineIds, days, actualsByLineDate);
+    const { total, daysWithValue } = sumAreaActual(area.memberLineIds, elapsedDays, actualsByLineDate);
     const actual = daysWithValue === 0 ? null : area.isAveraged ? total / daysWithValue : total;
 
     const { total: prevTotal, daysWithValue: prevDaysWithValue } = sumAreaActual(
       area.memberLineIds,
-      prevDays,
+      prevElapsedDays,
       prevActualsByLineDate
     );
     const prevActual = prevDaysWithValue === 0 ? null : area.isAveraged ? prevTotal / prevDaysWithValue : prevTotal;

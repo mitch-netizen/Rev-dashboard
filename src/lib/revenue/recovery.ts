@@ -21,13 +21,37 @@ export interface RecoveryRow {
   isBehind: boolean;
 }
 
+// A group's member lines (e.g. Main Bar Liquor under All Bars) have no target
+// of their own — only the group does — so they carry just an actual figure,
+// not a full RecoveryRow's target/variance/catch-up columns.
+export interface RecoveryMemberRow {
+  area: Area;
+  accruedActual: number | null;
+}
+
+export interface RecoveryGroup {
+  row: RecoveryRow;
+  members: RecoveryMemberRow[];
+}
+
+// Either a standalone targeted line (Gaming Turnover, Accommodation Occupancy)
+// or a group with its member lines nested underneath, ordered by where the
+// underlying revenue lines actually sit so the page reads top-to-bottom the
+// same way the Current Week grid does.
+export type RecoverySection =
+  | { kind: "standalone"; row: RecoveryRow }
+  | { kind: "group"; group: RecoveryGroup };
+
 export interface RecoveryReport {
   monday: Date;
   mondayIso: string;
   days: RecoveryDay[];
   isCurrentWeek: boolean;
   hasAnyTargets: boolean;
-  rows: RecoveryRow[];
+  sections: RecoverySection[];
+  // Lines with no target at all and no group membership (e.g. Gaming Revenue) —
+  // kept separate so they never masquerade as an on/ahead-of-target line.
+  ungroupedRows: RecoveryMemberRow[];
   remainingDaysCount: number;
 }
 
@@ -108,7 +132,7 @@ export async function computeRecoveryReport(
     return { total, hasValue };
   }
 
-  const rows: RecoveryRow[] = areas.map((area) => {
+  function computeRow(area: Area): RecoveryRow {
     const sumTarget = (set: RecoveryDay[]) => set.reduce((acc, d) => acc + targetFor(area.id, d.dayOfWeek), 0);
     const sumActual = (set: RecoveryDay[]) =>
       set.reduce((acc, d) => {
@@ -150,7 +174,51 @@ export async function computeRecoveryReport(
       requiredDailyAvgRemaining,
       isBehind: varianceToDate < -0.005,
     };
-  });
+  }
 
-  return { monday, mondayIso, days, isCurrentWeek, hasAnyTargets, rows, remainingDaysCount: remainingDays.length };
+  // Only Gaming Turnover, Accommodation Occupancy and the three groups (All
+  // Bars / All Food / Retail) carry an actual target — everything else is
+  // either a group member (rolled into its group's total) or untargeted.
+  const groupAreas = areas.filter((a) => a.kind === "group");
+  const groupMemberIds = new Set(groupAreas.flatMap((g) => g.memberLineIds));
+  const lineAreas = areas.filter((a) => a.kind === "line");
+
+  const standaloneRows = lineAreas
+    .filter((a) => !groupMemberIds.has(a.id) && targetsByAreaDay.has(a.id))
+    .map(computeRow);
+
+  const groups: RecoveryGroup[] = groupAreas.map((group) => ({
+    row: computeRow(group),
+    members: lineAreas
+      .filter((l) => group.memberLineIds.includes(l.id))
+      .map((l) => ({ area: l, accruedActual: computeRow(l).accruedActual })),
+  }));
+
+  const ungroupedRows = lineAreas
+    .filter((a) => !groupMemberIds.has(a.id) && !targetsByAreaDay.has(a.id))
+    .map((a) => ({ area: a, accruedActual: computeRow(a).accruedActual }));
+
+  // Slot each group in among the standalone lines by where its member lines
+  // actually sit (its lowest display order), so the page reads in the same
+  // top-to-bottom order as the Current Week grid instead of grouping
+  // everything with a target above everything without one.
+  const orderedSections = [
+    ...standaloneRows.map((row) => ({ sortKey: row.area.displayOrder, section: { kind: "standalone" as const, row } })),
+    ...groups.map((group) => ({
+      sortKey: Math.min(...group.members.map((m) => m.area.displayOrder)),
+      section: { kind: "group" as const, group },
+    })),
+  ].sort((a, b) => a.sortKey - b.sortKey);
+  const sections: RecoverySection[] = orderedSections.map((s) => s.section);
+
+  return {
+    monday,
+    mondayIso,
+    days,
+    isCurrentWeek,
+    hasAnyTargets,
+    sections,
+    ungroupedRows,
+    remainingDaysCount: remainingDays.length,
+  };
 }

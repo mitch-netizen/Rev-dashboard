@@ -1,0 +1,325 @@
+:root {
+  --qr-bg: #f5f0e6;
+  --qr-surface: #ffffff;
+  --qr-card-bg: #fbf7ef;
+  --qr-ink: #1c1a16;
+  --qr-ink-soft: #5b5648;
+  --qr-header-bg: #17140f;
+  --qr-header-fg: #f5f0e6;
+  --qr-gold: #b8902e;
+  --qr-gold-soft: #e8d9b5;
+  --qr-green-table: #1f4a3d;
+  --qr-green-status-bg: #e4eee7;
+  --qr-green-status-fg: #1f4a3d;
+  --qr-red: #a23b2e;
+  --qr-red-status-bg: #f5e4e1;
+  --qr-red-status-fg: #a23b2e;
+  --qr-line: #e3dbc9;
+  --qr-row-alt: #faf6ec;
+  --qr-total-row: #f0e5cb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --qr-bg: #17140f;
+    --qr-surface: #201c15;
+    --qr-card-bg: #24201a;
+    --qr-ink: #f0ead9;
+    --qr-ink-soft: #b8af98;
+    --qr-header-bg: #0c0a07;
+    --qr-header-fg: #f0ead9;
+    --qr-gold: #d8b45c;
+    --qr-gold-soft: #4a3d20;
+    --qr-green-table: #24463b;
+    --qr-green-status-bg: #1d3128;
+    --qr-green-status-fg: #8fcbae;
+    --qr-red: #c4695a;
+    --qr-red-status-bg: #3a211c;
+    --qr-red-status-fg: #e0998a;
+    --qr-line: #38321f;
+    --qr-row-alt: #1c1811;
+    --qr-total-row: #332a17;
+  }
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 0 56px;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--qr-ink);
+}
+.page * {
+  box-sizing: border-box;
+}
+
+.reportHeader {
+  background: var(--qr-header-bg);
+  color: var(--qr-header-fg);
+  border-radius: 10px;
+  padding: 26px 32px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.reportHeader h1 {
+  font-family: Georgia, "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 2.05rem;
+  margin: 0 0 4px;
+  letter-spacing: 0.01em;
+}
+.subtitle {
+  color: var(--qr-gold);
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+}
+.status {
+  text-align: right;
+  font-size: 0.86rem;
+  color: var(--qr-header-fg);
+  opacity: 0.88;
+  line-height: 1.6;
+}
+.status strong {
+  color: var(--qr-header-fg);
+  opacity: 1;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin: 22px 0;
+}
+.statCard {
+  background: var(--qr-card-bg);
+  border: 1px solid var(--qr-line);
+  border-left: 5px solid var(--qr-gold);
+  border-radius: 8px;
+  padding: 16px 16px 14px;
+}
+.statCard.short {
+  border-left-color: var(--qr-red);
+}
+.statCard .label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--qr-ink-soft);
+  margin-bottom: 6px;
+}
+.statCard .value {
+  font-family: Georgia, "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.statCard .trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.statCard .trend.up {
+  color: var(--qr-green-status-fg);
+}
+.statCard .trend.down {
+  color: var(--qr-red-status-fg);
+}
+.statCard .targetLine {
+  font-size: 0.78rem;
+  color: var(--qr-ink-soft);
+}
+
+.block {
+  margin-top: 26px;
+}
+.block h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+.page table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--qr-surface);
+  font-size: 0.86rem;
+}
+.page thead th {
+  background: var(--qr-green-table);
+  color: #f5f0e6;
+  text-align: right;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+.page thead th:first-child,
+.page tbody td:first-child {
+  text-align: left;
+}
+.page tbody td {
+  padding: 9px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--qr-line);
+  white-space: nowrap;
+}
+.page tbody tr:nth-child(even) {
+  background: var(--qr-row-alt);
+}
+.page tbody tr.totalRow {
+  background: var(--qr-total-row);
+  font-weight: 700;
+}
+.page .totalRow td {
+  border-top: 2px solid var(--qr-gold);
+  border-bottom: none;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 20px;
+  align-items: start;
+}
+.statusPill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.statusPill.on {
+  background: var(--qr-green-status-bg);
+  color: var(--qr-green-status-fg);
+}
+.statusPill.short {
+  background: var(--qr-red-status-bg);
+  color: var(--qr-red-status-fg);
+}
+.lineLabel {
+  font-weight: 600;
+}
+
+.sourceNote {
+  margin-top: 26px;
+  font-size: 0.76rem;
+  color: var(--qr-ink-soft);
+  border-top: 1px solid var(--qr-line);
+  padding-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .statGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 7mm;
+  }
+  body {
+    background: #fff;
+  }
+  .page {
+    max-width: none;
+    padding: 0;
+    font-size: 12px;
+  }
+  .reportHeader {
+    border-radius: 0;
+    padding: 12px 16px;
+  }
+  .reportHeader h1 {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+  }
+  .subtitle {
+    font-size: 0.78rem;
+  }
+  .status {
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+
+  .statGrid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 7px 0;
+  }
+  .statCard {
+    padding: 6px 10px 5px;
+    border-radius: 5px;
+  }
+  .statCard .label {
+    font-size: 0.58rem;
+    margin-bottom: 2px;
+  }
+  .statCard .value {
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+  }
+  .statCard .trend {
+    font-size: 0.66rem;
+    margin-bottom: 0;
+  }
+  .statCard .targetLine {
+    font-size: 0.6rem;
+  }
+
+  .block {
+    margin-top: 8px;
+  }
+  .block h2 {
+    font-size: 0.76rem;
+    margin-bottom: 3px;
+  }
+
+  .twoCol {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 10px;
+  }
+
+  .page table {
+    font-size: 0.6rem;
+  }
+  .page thead th {
+    padding: 3px 5px;
+    white-space: normal;
+    line-height: 1.1;
+    font-size: 0.54rem;
+  }
+  .page tbody td {
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+  .sourceNote {
+    margin-top: 5px;
+    padding-top: 4px;
+    font-size: 0.56rem;
+  }
+
+  .twoCol,
+  .page table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

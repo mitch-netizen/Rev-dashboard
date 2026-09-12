@@ -3,6 +3,7 @@ import { VENUE_ID } from "./constants";
 
 export interface Area {
   id: string; // revenue_line_id for a line, group_id for a group
+  key: string; // the stable rev_revenue_lines.key / rev_revenue_line_groups.key
   kind: "line" | "group";
   label: string;
   unit: "currency" | "percent";
@@ -73,13 +74,13 @@ export async function fetchAreas(supabase: SupabaseClient): Promise<Area[]> {
   const [{ data: lines }, { data: groups }, { data: members }] = await Promise.all([
     supabase
       .from("rev_revenue_lines")
-      .select("id, label, unit, is_averaged, display_order")
+      .select("id, key, label, unit, is_averaged, display_order")
       .eq("venue_id", VENUE_ID)
       .eq("active", true)
       .order("display_order"),
     supabase
       .from("rev_revenue_line_groups")
-      .select("id, label, display_order")
+      .select("id, key, label, display_order")
       .eq("venue_id", VENUE_ID)
       .order("display_order"),
     supabase.from("rev_revenue_line_group_members").select("group_id, revenue_line_id"),
@@ -87,6 +88,7 @@ export async function fetchAreas(supabase: SupabaseClient): Promise<Area[]> {
 
   const lineAreas: Area[] = (lines ?? []).map((l) => ({
     id: l.id,
+    key: l.key,
     kind: "line" as const,
     label: l.label,
     unit: l.unit as "currency" | "percent",
@@ -97,6 +99,7 @@ export async function fetchAreas(supabase: SupabaseClient): Promise<Area[]> {
 
   const groupAreas: Area[] = (groups ?? []).map((g) => ({
     id: g.id,
+    key: g.key,
     kind: "group" as const,
     label: g.label,
     unit: "currency" as const,

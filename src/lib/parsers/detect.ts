@@ -8,7 +8,7 @@ import {
   parseNetmeterPdfPages,
   type NetmeterDayResult,
 } from "./netmeter";
-import { parseGolfLedger, type GolfDayResult } from "./golf";
+import { parseGolfLedger, tryParseGolfXlsx, type GolfDayResult } from "./golf";
 
 export type DetectedReport =
   | { type: "swiftpos"; result: SwiftposParseResult }
@@ -25,7 +25,12 @@ export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {
   const fileType = sniffFileType(buffer);
 
   if (fileType === "xlsx") {
-    // The only known xlsx-native report is Net Meter.
+    // The golf booking platform's ledger can also be exported as a genuine
+    // .xlsx rather than the CSV/disguised-text form — check for it first;
+    // Net Meter is the only other known genuine-.xlsx report.
+    const golfResult = await tryParseGolfXlsx(buffer);
+    if (golfResult) return { type: "golf", result: golfResult };
+
     const result = await parseNetmeterXlsx(buffer);
     return { type: "netmeter", result };
   }

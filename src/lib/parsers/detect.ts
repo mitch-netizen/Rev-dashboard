@@ -8,11 +8,18 @@ import {
   parseNetmeterPdfPages,
   type NetmeterDayResult,
 } from "./netmeter";
+import { parseGolfLedger, type GolfDayResult } from "./golf";
 
 export type DetectedReport =
   | { type: "swiftpos"; result: SwiftposParseResult }
   | { type: "netmeter"; result: NetmeterDayResult[] }
-  | { type: "rms"; result: RmsDayResult[] };
+  | { type: "rms"; result: RmsDayResult[] }
+  | { type: "golf"; result: GolfDayResult[] };
+
+// The golf booking platform's ledger export — a quoted CSV, distinguished
+// from Net Meter's disguised-.xlsx tab-delimited text by this header, which
+// is unique to this source.
+const GOLF_LEDGER_HEADER = /^"reference","venue","credit","debit","account","class","memo","date","source"/;
 
 export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {
   const fileType = sniffFileType(buffer);
@@ -24,9 +31,13 @@ export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {
   }
 
   if (fileType === "text") {
-    // A disguised .xlsx that's actually tab-delimited text — only known
-    // source of this is Net Meter.
-    const result = parseNetmeterText(buffer.toString("utf-8"));
+    const text = buffer.toString("utf-8");
+    if (GOLF_LEDGER_HEADER.test(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text)) {
+      return { type: "golf", result: parseGolfLedger(text) };
+    }
+    // A disguised .xlsx that's actually tab-delimited text — only other
+    // known source of this is Net Meter.
+    const result = parseNetmeterText(text);
     return { type: "netmeter", result };
   }
 

@@ -48,7 +48,7 @@ function isAuthorized(request: Request): boolean {
 // email — only PDF/xlsx attachments are worth trying to parse.
 function looksLikeReport(attachment: InboundAttachment): boolean {
   const name = attachment.Name.toLowerCase();
-  return name.endsWith(".pdf") || name.endsWith(".xlsx") || name.endsWith(".xls");
+  return name.endsWith(".pdf") || name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv");
 }
 
 export async function POST(request: Request) {

@@ -24,7 +24,9 @@ function formatSigned(value: number, unit: "currency" | "percent") {
 }
 
 function TrendLabel({ row }: { row: HeadlineRow }) {
-  if (row.trend === null) return null;
+  if (row.trend === null) {
+    return <div className={styles.targetLine}>No prior week data</div>;
+  }
   const up = row.trend >= 0;
   const suffix = row.area.isAveraged ? "pp" : "%";
   return (
@@ -35,6 +37,27 @@ function TrendLabel({ row }: { row: HeadlineRow }) {
       <span className={styles.trendLabel}> vs last week</span>
     </div>
   );
+}
+
+function VarianceLine({ row }: { row: HeadlineRow }) {
+  if (row.variance === null) return null;
+  const up = row.variance >= 0;
+  return (
+    <div className={`${styles.trend} ${up ? styles.up : styles.down}`}>
+      {formatSigned(row.variance, row.area.unit)}
+    </div>
+  );
+}
+
+function TargetProgress({ row }: { row: HeadlineRow }) {
+  if (row.weeklyTarget === null) {
+    return <div className={styles.targetLine}>No target set</div>;
+  }
+  if (row.actual === null || row.weeklyTarget === 0) {
+    return <div className={styles.targetLine}>—</div>;
+  }
+  const pct = Math.round((row.actual / row.weeklyTarget) * 100);
+  return <div className={styles.targetLine}>{pct}% to target</div>;
 }
 
 export default async function WeeklyReportPage({
@@ -108,13 +131,23 @@ export default async function WeeklyReportPage({
             <div key={row.area.id} className={`${styles.statCard} ${row.isBehind ? styles.short : ""}`}>
               <div className={styles.label}>{row.area.label}</div>
               <div className={styles.value}>{row.actual !== null ? formatArea(row.actual, row.area.unit) : "—"}</div>
-              <TrendLabel row={row} />
-              <div className={styles.targetLine}>
-                {row.weeklyTarget !== null ? `vs ${formatArea(row.weeklyTarget, row.area.unit)} target` : "No target set"}
-              </div>
+              <VarianceLine row={row} />
+              <TargetProgress row={row} />
             </div>
           ))}
         </div>
+
+        <section className={styles.block}>
+          <h2>Week-over-Week Trend</h2>
+          <div className={styles.trendGrid}>
+            {headline.map((row) => (
+              <div key={row.area.id} className={styles.trendCard}>
+                <div className={styles.label}>{row.area.label}</div>
+                <TrendLabel row={row} />
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className={styles.block}>
           <h2>Daily Actuals — Monday to Sunday</h2>

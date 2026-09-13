@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { VENUE_ID } from "./constants";
+import { VENUE_ID, venueNow, mondayOf, addDays, toIsoDate } from "./constants";
+import { computeDayOfWeekWeights, type DayOfWeekWeights } from "./target-distribution";
 
 export interface Area {
   id: string; // revenue_line_id for a line, group_id for a group
@@ -119,4 +120,86 @@ export async function fetchAreas(supabase: SupabaseClient): Promise<Area[]> {
   }));
 
   return [...lineAreas, ...groupAreas].sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+const WEIGHT_LOOKBACK_DAYS = 56; // 8 weeks — enough to average out one-off blips, recent enough to reflect current trading
+
+export interface TargetHelpers {
+  // Historical day-of-week weights for the monthly forecast / weekly total
+  // distribution, keyed by area id.
+  weights: Record<string, DayOfWeekWeights>;
+  // Last full week's actuals per area, Monday..Sunday, null where that day
+  // has no recorded actual yet — feeds the "Copy last week" action.
+  lastWeek: Record<string, (number | null)[]>;
+}
+
+// One rev_daily_actuals fetch, wide enough to cover both the weight lookback
+// window and last week, then sliced two ways per area.
+export async function fetchTargetHelpers(supabase: SupabaseClient, areas: Area[]): Promise<TargetHelpers> {
+  const allLineIds = [...new Set(areas.flatMap((a) => a.memberLineIds))];
+  const weights: Record<string, DayOfWeekWeights> = {};
+  const lastWeek: Record<string, (number | null)[]> = {};
+  if (allLineIds.length === 0) {
+    for (const area of areas) {
+      weights[area.id] = computeDayOfWeekWeights([]);
+      lastWeek[area.id] = [null, null, null, null, null, null, null];
+    }
+    return { weights, lastWeek };
+  }
+
+  const today = venueNow();
+  const todayIso = toIsoDate(today);
+  const fromIso = toIsoDate(addDays(today, -WEIGHT_LOOKBACK_DAYS));
+  const thisMonday = mondayOf(today);
+  const lastMondayIso = toIsoDate(addDays(thisMonday, -7));
+
+  const { data } = await supabase
+    .from("rev_daily_actuals")
+    .select("trade_date, revenue_line_id, value")
+    .eq("venue_id", VENUE_ID)
+    .in("revenue_line_id", allLineIds)
+    .gte("trade_date", fromIso)
+    .lt("trade_date", todayIso);
+
+  const byLineDate = new Map<string, Map<string, number>>();
+  for (const row of data ?? []) {
+    if (!byLineDate.has(row.revenue_line_id)) byLineDate.set(row.revenue_line_id, new Map());
+    byLineDate.get(row.revenue_line_id)!.set(row.trade_date, Number(row.value));
+  }
+
+  for (const area of areas) {
+    const dates = new Set<string>();
+    for (const lineId of area.memberLineIds) {
+      for (const date of byLineDate.get(lineId)?.keys() ?? []) dates.add(date);
+    }
+
+    const rows: { date: string; value: number }[] = [];
+    for (const date of dates) {
+      if (area.isAveraged) {
+        // isAveraged only applies to single-line areas (see fetchAreas).
+        const v = byLineDate.get(area.memberLineIds[0])?.get(date);
+        if (v !== undefined) rows.push({ date, value: v });
+      } else {
+        let sum = 0;
+        let any = false;
+        for (const lineId of area.memberLineIds) {
+          const v = byLineDate.get(lineId)?.get(date);
+          if (v !== undefined) {
+            sum += v;
+            any = true;
+          }
+        }
+        if (any) rows.push({ date, value: sum });
+      }
+    }
+    weights[area.id] = computeDayOfWeekWeights(rows);
+
+    const byDate = new Map(rows.map((r) => [r.date, r.value]));
+    lastWeek[area.id] = Array.from({ length: 7 }, (_, i) => {
+      const date = toIsoDate(addDays(new Date(`${lastMondayIso}T00:00:00Z`), i));
+      return byDate.get(date) ?? null;
+    });
+  }
+
+  return { weights, lastWeek };
 }

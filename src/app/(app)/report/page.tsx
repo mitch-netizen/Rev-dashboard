@@ -32,6 +32,7 @@ function TrendLabel({ row }: { row: HeadlineRow }) {
       {up ? "▲ +" : "▼ −"}
       {Math.abs(row.trend).toFixed(1)}
       {suffix}
+      <span className={styles.trendLabel}> vs last week</span>
     </div>
   );
 }

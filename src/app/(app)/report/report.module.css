@@ -132,6 +132,10 @@
 .statCard .trend.down {
   color: var(--qr-red-status-fg);
 }
+.statCard .trendLabel {
+  font-weight: 400;
+  color: var(--qr-ink-soft);
+}
 .statCard .targetLine {
   font-size: 0.78rem;
   color: var(--qr-ink-soft);

@@ -51,7 +51,7 @@ export default async function CurrentWeekPage({
           <ExportBar excelHref={`/api/export/week?week=${mondayIso}`} reportHref={`/report?week=${mondayIso}`} />
         </div>
       </div>
-      <WeekGrid days={days} lines={lines} actuals={actuals} />
+      <WeekGrid key={mondayIso} days={days} lines={lines} actuals={actuals} />
     </div>
   );
 }

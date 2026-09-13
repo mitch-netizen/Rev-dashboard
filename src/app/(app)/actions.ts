@@ -9,6 +9,7 @@ const SOURCE_BY_DOCUMENT_TYPE: Record<string, string> = {
   swiftpos: "parsed_swiftpos",
   netmeter: "parsed_netmeter",
   rms: "parsed_rms",
+  golf: "parsed_golf",
 };
 
 export async function upsertDailyActual(

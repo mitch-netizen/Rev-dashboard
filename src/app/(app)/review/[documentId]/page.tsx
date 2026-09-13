@@ -6,6 +6,7 @@ const TYPE_LABELS: Record<string, string> = {
   swiftpos: "SwiftPOS — Master Group Sales by Location",
   netmeter: "Net Meter (Gaming)",
   rms: "RMS Occupancy",
+  golf: "Golf — Booking Ledger",
 };
 
 export default async function ReviewPage({

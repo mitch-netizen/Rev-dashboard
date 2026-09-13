@@ -71,12 +71,22 @@ export function buildLineItems(
     return items;
   }
 
-  // rms
-  const occId = lineIdByKey.get("accommodation_occupancy");
-  if (!occId) return [];
+  if (report.type === "rms") {
+    const occId = lineIdByKey.get("accommodation_occupancy");
+    if (!occId) return [];
+    return report.result.map((day) => ({
+      tradeDate: day.date,
+      revenueLineId: occId,
+      extractedValue: day.occPercent,
+    }));
+  }
+
+  // golf
+  const golfId = lineIdByKey.get("golf");
+  if (!golfId) return [];
   return report.result.map((day) => ({
     tradeDate: day.date,
-    revenueLineId: occId,
-    extractedValue: day.occPercent,
+    revenueLineId: golfId,
+    extractedValue: day.revenue,
   }));
 }

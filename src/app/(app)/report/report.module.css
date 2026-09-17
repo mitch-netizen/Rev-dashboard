@@ -132,6 +132,10 @@
 .statCard .trend.down {
   color: var(--qr-red-status-fg);
 }
+.statCard .trendLabel {
+  font-weight: 400;
+  color: var(--qr-ink-soft);
+}
 .statCard .targetLine {
   font-size: 0.78rem;
   color: var(--qr-ink-soft);
@@ -144,6 +148,26 @@
   font-size: 1rem;
   font-weight: 700;
   margin: 0 0 10px;
+}
+
+.trendGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.trendCard {
+  background: var(--qr-card-bg);
+  border: 1px solid var(--qr-line);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.trendCard .label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--qr-ink-soft);
+  margin-bottom: 4px;
 }
 
 .tableScroll {
@@ -223,7 +247,8 @@
 }
 
 @media (max-width: 900px) {
-  .statGrid {
+  .statGrid,
+  .trendGrid {
     grid-template-columns: repeat(2, 1fr);
   }
   .twoCol {
@@ -282,6 +307,26 @@
     margin-bottom: 0;
   }
   .statCard .targetLine {
+    font-size: 0.6rem;
+  }
+
+  .trendGrid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .trendCard {
+    padding: 4px 8px;
+    border-radius: 5px;
+  }
+  .trendCard .label {
+    font-size: 0.58rem;
+    margin-bottom: 2px;
+  }
+  .trendCard .trend {
+    font-size: 0.66rem;
+    margin-bottom: 0;
+  }
+  .trendCard .targetLine {
     font-size: 0.6rem;
   }
 

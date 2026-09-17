@@ -7,10 +7,9 @@ import { ingestReportFile } from "@/lib/revenue/ingest";
 // Receives Postmark's inbound-webhook payload (https://postmarkapp.com/developer/webhooks/inbound-webhook):
 // { From, Subject, Attachments: [{ Name, Content (base64), ContentType, ContentLength }], ... }
 // Set up so daily emailed SwiftPOS/RMS reports (and a manually-exported Net
-// Meter file, forwarded the same way) land straight in pending_review
+// Meter file, forwarded the same way) land straight in rev_daily_actuals
 // without anyone touching the /upload page — the report type is detected
-// from content just like a browser upload, and nothing here ever commits to
-// rev_daily_actuals, so the review step still can't be skipped.
+// from content just like a browser upload.
 interface InboundAttachment {
   Name: string;
   Content: string;

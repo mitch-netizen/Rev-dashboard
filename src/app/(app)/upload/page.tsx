@@ -1,18 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 interface UploadResult {
   filename: string;
   status: "uploading" | "done" | "error";
-  documentId?: string;
   error?: string;
 }
 
 export default function UploadPage() {
-  const router = useRouter();
   const [dragOver, setDragOver] = useState(false);
   const [results, setResults] = useState<UploadResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +25,7 @@ export default function UploadPage() {
       setResults((prev) => {
         const next = [...prev];
         next[index] = res.ok
-          ? { filename: file.name, status: "done", documentId: json.documentId }
+          ? { filename: file.name, status: "done" }
           : { filename: file.name, status: "error", error: json.error ?? "Failed to parse file" };
         return next;
       });
@@ -50,34 +46,8 @@ export default function UploadPage() {
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
-    // A single file keeps the old behaviour: go straight to its review screen.
-    if (fileArray.length === 1 && results.length === 0) {
-      setResults([{ filename: fileArray[0].name, status: "uploading" }]);
-      const formData = new FormData();
-      formData.append("file", fileArray[0]);
-      try {
-        const res = await fetch("/api/parse", { method: "POST", body: formData });
-        const json = await res.json();
-        if (!res.ok) {
-          setResults([{ filename: fileArray[0].name, status: "error", error: json.error ?? "Failed to parse file" }]);
-          return;
-        }
-        router.push(`/review/${json.documentId}`);
-      } catch {
-        setResults([
-          {
-            filename: fileArray[0].name,
-            status: "error",
-            error: "Upload failed — check your connection and try again",
-          },
-        ]);
-      }
-      return;
-    }
-
-    // Multiple files: upload and parse each independently and in parallel —
-    // each report gets its own review-before-commit screen, since the
-    // review/commit step is inherently per-document.
+    // Each file is uploaded, parsed, and saved to rev_daily_actuals
+    // independently and in parallel.
     const startIndex = results.length;
     setResults((prev) => [
       ...prev,
@@ -93,7 +63,8 @@ export default function UploadPage() {
         <p className="text-sm text-neutral-500">
           SwiftPOS Master Group Sales, Net Meter (Gaming), and/or RMS Occupancy — drop as many as
           you have at once. The report type and trade date are detected automatically for each,
-          and you&apos;ll get a chance to review every figure before it&apos;s saved.
+          and figures are saved straight to the Current Week grid. Mistakes can be fixed there
+          any time.
         </p>
       </div>
 
@@ -137,12 +108,7 @@ export default function UploadPage() {
               <span className="truncate">{r.filename}</span>
               {r.status === "uploading" && <span className="text-neutral-400">Parsing…</span>}
               {r.status === "done" && (
-                <Link
-                  href={`/review/${r.documentId}`}
-                  className="font-medium text-neutral-900 underline dark:text-white"
-                >
-                  Review
-                </Link>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">Saved</span>
               )}
               {r.status === "error" && <span className="text-red-600">{r.error}</span>}
             </li>

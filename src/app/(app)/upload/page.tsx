@@ -61,10 +61,10 @@ export default function UploadPage() {
       <div>
         <h1 className="text-xl font-semibold">Upload reports</h1>
         <p className="text-sm text-neutral-500">
-          SwiftPOS Master Group Sales, Net Meter (Gaming), and/or RMS Occupancy — drop as many as
-          you have at once. The report type and trade date are detected automatically for each,
-          and figures are saved straight to the Current Week grid. Mistakes can be fixed there
-          any time.
+          SwiftPOS Master Group Sales, Maxgaming Daily Report, RMS Occupancy, and/or the Golf
+          booking ledger — drop as many as you have at once. The report type and trade date are
+          detected automatically for each, and figures are saved straight to the Current Week
+          grid. Mistakes can be fixed there any time.
         </p>
       </div>
 

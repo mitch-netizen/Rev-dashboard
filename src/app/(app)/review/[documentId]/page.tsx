@@ -7,6 +7,7 @@ const TYPE_LABELS: Record<string, string> = {
   netmeter: "Net Meter (Gaming)",
   rms: "RMS Occupancy",
   golf: "Golf — Booking Ledger",
+  maxgaming_daily: "Maxgaming — Daily Report",
 };
 
 export default async function ReviewPage({
@@ -40,7 +41,7 @@ export default async function ReviewPage({
         id: item.id,
         tradeDate: item.trade_date,
         lineLabel: line?.label ?? "Unknown line",
-        unit: (line?.unit ?? "currency") as "currency" | "percent",
+        unit: (line?.unit ?? "currency") as "currency" | "percent" | "count",
         displayOrder: line?.display_order ?? 0,
         extractedValue: Number(item.extracted_value),
         correctedValue: item.corrected_value === null ? null : Number(item.corrected_value),

@@ -1,28 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--qr-bg);
+  --foreground: var(--qr-ink);
+
+  /* The Queens brand palette — gold/cream/dark-green, shared across every
+     page (not just the printable report) so the app reads as one system. */
+  --qr-bg: #f5f0e6;
+  --qr-surface: #ffffff;
+  --qr-card-bg: #fbf7ef;
+  --qr-ink: #1c1a16;
+  --qr-ink-soft: #5b5648;
+  --qr-ink-faint: #948d78;
+  --qr-header-bg: #17140f;
+  --qr-header-fg: #f5f0e6;
+  --qr-gold: #b8902e;
+  --qr-gold-soft: #e8d9b5;
+  --qr-green-table: #1f4a3d;
+  --qr-green-status-bg: #e4eee7;
+  --qr-green-status-fg: #1f4a3d;
+  --qr-red: #a23b2e;
+  --qr-red-status-bg: #f5e4e1;
+  --qr-red-status-fg: #a23b2e;
+  --qr-line: #e3dbc9;
+  --qr-row-alt: #faf6ec;
+  --qr-total-row: #f0e5cb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-plex-sans);
+  --font-display: var(--font-playfair);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --qr-bg: #17140f;
+    --qr-surface: #201c15;
+    --qr-card-bg: #24201a;
+    --qr-ink: #f0ead9;
+    --qr-ink-soft: #b8af98;
+    --qr-ink-faint: #7e7862;
+    --qr-header-bg: #0c0a07;
+    --qr-header-fg: #f0ead9;
+    --qr-gold: #d8b45c;
+    --qr-gold-soft: #4a3d20;
+    --qr-green-table: #24463b;
+    --qr-green-status-bg: #1d3128;
+    --qr-green-status-fg: #8fcbae;
+    --qr-red: #c4695a;
+    --qr-red-status-bg: #3a211c;
+    --qr-red-status-fg: #e0998a;
+    --qr-line: #38321f;
+    --qr-row-alt: #1c1811;
+    --qr-total-row: #332a17;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
 }
 
 @media print {

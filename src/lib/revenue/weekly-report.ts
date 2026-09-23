@@ -1,11 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { VENUE_ID, venueNow, mondayOf, addDays, toIsoDate } from "./constants";
-import { ensureWeekTargetsSeeded, fetchAreas, type Area } from "./targets";
+import { ensureWeekTargetsSeeded, fetchAreas } from "./targets";
+import { computeHeadlineRows, type HeadlineRow } from "./week-kpis";
 
-// The five headline areas the printed report leads with, in display order —
-// two individual lines plus the three group targets. There's no schema flag
-// for "headline"; these keys are the ones the venue actually reports on.
-const HEADLINE_KEYS = ["gaming_turnover", "all_bars", "all_food", "retail", "accommodation_occupancy"];
+export type { HeadlineRow };
 
 export interface WeeklyReportDay {
   dayOfWeek: number;
@@ -16,19 +14,9 @@ export interface WeeklyReportDay {
 export interface WeeklyReportLine {
   id: string;
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
   isAveraged: boolean;
   weekTotal: number | null;
-}
-
-export interface HeadlineRow {
-  area: Area;
-  weeklyTarget: number | null;
-  actual: number | null;
-  variance: number | null;
-  isBehind: boolean;
-  prevActual: number | null;
-  trend: number | null; // % change for currency areas, percentage points for percent areas
 }
 
 export interface WeeklyReportData {
@@ -145,10 +133,6 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
 
   const daysReported = days.filter((d) => lineAreas.every((a) => actualsByLineDate.get(a.id)?.has(d.date))).length;
 
-  const headlineAreas = HEADLINE_KEYS.map((key) => areas.find((a) => a.key === key)).filter(
-    (a): a is Area => a !== undefined
-  );
-
   // "Week to date": for a closed/past week every day is already elapsed, so
   // this is the full week — but for the current, still-running week it must
   // exclude days that haven't happened yet (today's trade isn't closed out
@@ -159,37 +143,15 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
   const elapsedDayOfWeeks = new Set(elapsedDays.map((d) => d.dayOfWeek));
   const prevElapsedDays = prevDays.filter((d) => elapsedDayOfWeeks.has(d.dayOfWeek));
 
-  function sumTarget(areaId: string, dayList: WeeklyReportDay[]) {
-    const byDay = targetsByAreaDay.get(areaId);
-    if (!byDay) return 0;
-    return dayList.reduce((acc, d) => acc + (byDay.get(d.dayOfWeek) ?? 0), 0);
-  }
-
-  const headline: HeadlineRow[] = headlineAreas.map((area) => {
-    const hasTarget = targetsByAreaDay.has(area.id);
-    const targetTotal = sumTarget(area.id, elapsedDays);
-    const weeklyTarget = hasTarget && elapsedDays.length > 0 ? (area.isAveraged ? targetTotal / elapsedDays.length : targetTotal) : null;
-
-    const { total, daysWithValue } = sumAreaActual(area.memberLineIds, elapsedDays, actualsByLineDate);
-    const actual = daysWithValue === 0 ? null : area.isAveraged ? total / daysWithValue : total;
-
-    const { total: prevTotal, daysWithValue: prevDaysWithValue } = sumAreaActual(
-      area.memberLineIds,
-      prevElapsedDays,
-      prevActualsByLineDate
-    );
-    const prevActual = prevDaysWithValue === 0 ? null : area.isAveraged ? prevTotal / prevDaysWithValue : prevTotal;
-
-    const variance = actual !== null && weeklyTarget !== null ? actual - weeklyTarget : null;
-    const isBehind = variance !== null && variance < -0.005;
-
-    let trend: number | null = null;
-    if (actual !== null && prevActual !== null) {
-      trend = area.isAveraged ? actual - prevActual : prevActual !== 0 ? ((actual - prevActual) / prevActual) * 100 : null;
-    }
-
-    return { area, weeklyTarget, actual, variance, isBehind, prevActual, trend };
-  });
+  const headline = computeHeadlineRows(
+    areas,
+    elapsedDays,
+    prevElapsedDays,
+    targetsByAreaDay,
+    actualsByLineDate,
+    prevActualsByLineDate
+  );
+  const headlineAreas = headline.map((h) => h.area);
 
   const targetsByHeadlineDay: Record<string, Record<number, number>> = {};
   for (const area of headlineAreas) {

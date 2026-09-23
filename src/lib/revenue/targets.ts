@@ -7,7 +7,7 @@ export interface Area {
   key: string; // the stable rev_revenue_lines.key / rev_revenue_line_groups.key
   kind: "line" | "group";
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
   isAveraged: boolean;
   memberLineIds: string[]; // a line area is its own single member
   displayOrder: number;
@@ -99,7 +99,7 @@ export async function fetchAreas(supabase: SupabaseClient): Promise<Area[]> {
     key: l.key,
     kind: "line" as const,
     label: l.label,
-    unit: l.unit as "currency" | "percent",
+    unit: l.unit as "currency" | "percent" | "count",
     isAveraged: l.is_averaged,
     memberLineIds: [l.id],
     displayOrder: l.display_order,

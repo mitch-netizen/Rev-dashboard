@@ -1,6 +1,6 @@
-// Content sniffing, not extension-based: the Net Meter (gaming) report
-// occasionally arrives with a .xlsx filename that is actually tab-delimited
-// text, so we check the real bytes rather than trusting the name.
+// Content sniffing, not extension-based — reports have arrived before with
+// a filename that didn't match their real format, so we check the actual
+// bytes rather than trusting the name.
 
 export type SniffedFileType = "pdf" | "xlsx" | "text";
 

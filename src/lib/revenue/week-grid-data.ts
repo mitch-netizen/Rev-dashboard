@@ -9,7 +9,8 @@ export interface WeekGridDay {
 export interface WeekGridLine {
   id: string;
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
+  isAveraged: boolean;
 }
 
 export interface WeekGridData {
@@ -49,7 +50,7 @@ export async function fetchWeekGridData(supabase: SupabaseClient, weekParam?: st
 
   const { data: lineRows } = await supabase
     .from("rev_revenue_lines")
-    .select("id, label, unit")
+    .select("id, label, unit, is_averaged")
     .eq("venue_id", VENUE_ID)
     .eq("active", true)
     .order("display_order");
@@ -57,7 +58,8 @@ export async function fetchWeekGridData(supabase: SupabaseClient, weekParam?: st
   const lines: WeekGridLine[] = (lineRows ?? []).map((l) => ({
     id: l.id,
     label: l.label,
-    unit: l.unit as "currency" | "percent",
+    unit: l.unit as "currency" | "percent" | "count",
+    isAveraged: l.is_averaged,
   }));
 
   const { data: actualRows } = await supabase

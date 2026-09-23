@@ -11,15 +11,17 @@ export interface ReviewLineItem {
   id: string;
   tradeDate: string;
   lineLabel: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
   displayOrder: number;
   extractedValue: number;
   correctedValue: number | null;
   flag: string;
 }
 
-function formatValue(value: number, unit: "currency" | "percent") {
-  return unit === "currency" ? `$${value.toFixed(2)}` : `${value.toFixed(2)}%`;
+function formatValue(value: number, unit: "currency" | "percent" | "count") {
+  if (unit === "currency") return `$${value.toFixed(2)}`;
+  if (unit === "count") return value.toFixed(0);
+  return `${value.toFixed(2)}%`;
 }
 
 export default function ReviewTable({

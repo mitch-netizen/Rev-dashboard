@@ -9,12 +9,14 @@ import {
   type NetmeterDayResult,
 } from "./netmeter";
 import { parseGolfLedger, tryParseGolfXlsx, type GolfDayResult } from "./golf";
+import { parseMaxgamingDaily, type MaxgamingDailyResult } from "./maxgaming-daily";
 
 export type DetectedReport =
   | { type: "swiftpos"; result: SwiftposParseResult }
   | { type: "netmeter"; result: NetmeterDayResult[] }
   | { type: "rms"; result: RmsDayResult[] }
-  | { type: "golf"; result: GolfDayResult[] };
+  | { type: "golf"; result: GolfDayResult[] }
+  | { type: "maxgaming_daily"; result: MaxgamingDailyResult };
 
 // The golf booking platform's ledger export — a quoted CSV, distinguished
 // from Net Meter's disguised-.xlsx tab-delimited text by this header, which
@@ -56,6 +58,12 @@ export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {
 
   if (/Occupancy By No Group/i.test(fullText)) {
     return { type: "rms", result: parseRms(fullText) };
+  }
+
+  // Maxgaming's "Daily Report" export — distinguished from the per-machine
+  // Net Meter PDF by its unique "Carded Gaming" / "Carded Spend" sections.
+  if (/Carded Gaming/i.test(fullText) && /Carded Spend/i.test(fullText)) {
+    return { type: "maxgaming_daily", result: parseMaxgamingDaily(fullText) };
   }
 
   // Only remaining known PDF report type.

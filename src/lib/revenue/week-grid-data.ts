@@ -9,7 +9,7 @@ export interface WeekGridDay {
 export interface WeekGridLine {
   id: string;
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
 }
 
 export interface WeekGridData {
@@ -57,7 +57,7 @@ export async function fetchWeekGridData(supabase: SupabaseClient, weekParam?: st
   const lines: WeekGridLine[] = (lineRows ?? []).map((l) => ({
     id: l.id,
     label: l.label,
-    unit: l.unit as "currency" | "percent",
+    unit: l.unit as "currency" | "percent" | "count",
   }));
 
   const { data: actualRows } = await supabase

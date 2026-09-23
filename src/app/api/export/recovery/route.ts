@@ -27,7 +27,8 @@ export async function GET(request: Request) {
   ];
   sheet.getRow(1).font = { bold: true };
 
-  const fmt = (unit: "currency" | "percent") => (unit === "percent" ? "0.0\"%\"" : "$#,##0");
+  const fmt = (unit: "currency" | "percent" | "count") =>
+    unit === "percent" ? "0.0\"%\"" : unit === "count" ? "#,##0" : "$#,##0";
   const numericKeys = [
     "weeklyTarget",
     "accruedTarget",

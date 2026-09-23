@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       if (value !== undefined) row[day.date] = value;
     }
     const addedRow = sheet.addRow(row);
-    const numFmt = line.unit === "percent" ? "0.0\"%\"" : "$#,##0";
+    const numFmt = line.unit === "percent" ? "0.0\"%\"" : line.unit === "count" ? "#,##0" : "$#,##0";
     for (const day of days) {
       addedRow.getCell(day.date).numFmt = numFmt;
       addedRow.getCell(day.date).alignment = { horizontal: "right" };

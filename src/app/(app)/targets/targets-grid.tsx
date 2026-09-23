@@ -27,7 +27,7 @@ function currentMonthValue(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatAmount(value: number, unit: "currency" | "percent"): string {
+function formatAmount(value: number, unit: "currency" | "percent" | "count"): string {
   return unit === "percent" ? `${value.toFixed(1)}%` : value.toLocaleString("en-AU", { maximumFractionDigits: 0 });
 }
 

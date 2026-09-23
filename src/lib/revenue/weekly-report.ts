@@ -16,7 +16,7 @@ export interface WeeklyReportDay {
 export interface WeeklyReportLine {
   id: string;
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
   isAveraged: boolean;
   weekTotal: number | null;
 }

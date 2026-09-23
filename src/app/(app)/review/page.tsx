@@ -7,6 +7,7 @@ const TYPE_LABELS: Record<string, string> = {
   netmeter: "Net Meter (Gaming)",
   rms: "RMS Occupancy",
   golf: "Golf — Booking Ledger",
+  maxgaming_daily: "Maxgaming — Daily Report",
 };
 
 export default async function ReviewQueuePage() {

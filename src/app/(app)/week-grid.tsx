@@ -6,7 +6,7 @@ import { upsertDailyActual } from "./actions";
 export interface WeekGridLine {
   id: string;
   label: string;
-  unit: "currency" | "percent";
+  unit: "currency" | "percent" | "count";
 }
 
 export interface WeekGridDay {

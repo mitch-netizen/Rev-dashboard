@@ -14,13 +14,17 @@ function formatCurrency(value: number, fractionDigits = 0) {
   });
 }
 
-function formatArea(value: number, unit: "currency" | "percent", fractionDigits = 0) {
-  return unit === "percent" ? `${value.toFixed(1)}%` : formatCurrency(value, fractionDigits);
+function formatArea(value: number, unit: "currency" | "percent" | "count", fractionDigits = 0) {
+  if (unit === "percent") return `${value.toFixed(1)}%`;
+  if (unit === "count") return value.toLocaleString("en-AU", { maximumFractionDigits: 0 });
+  return formatCurrency(value, fractionDigits);
 }
 
-function formatSigned(value: number, unit: "currency" | "percent") {
+function formatSigned(value: number, unit: "currency" | "percent" | "count") {
   const sign = value >= 0 ? "+" : "";
-  return unit === "percent" ? `${sign}${value.toFixed(1)}pp` : `${sign}${formatCurrency(value, 0)}`;
+  if (unit === "percent") return `${sign}${value.toFixed(1)}pp`;
+  if (unit === "count") return `${sign}${value.toLocaleString("en-AU", { maximumFractionDigits: 0 })}`;
+  return `${sign}${formatCurrency(value, 0)}`;
 }
 
 function TrendLabel({ row }: { row: HeadlineRow }) {

@@ -8,6 +8,7 @@ const SOURCE_BY_DOCUMENT_TYPE: Record<string, string> = {
   netmeter: "parsed_netmeter",
   rms: "parsed_rms",
   golf: "parsed_golf",
+  maxgaming_daily: "parsed_maxgaming_daily",
 };
 
 // Shared by the browser upload endpoint and the inbound-email endpoint: both

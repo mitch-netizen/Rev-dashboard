@@ -5,10 +5,10 @@ import { addDays, toIsoDate } from "@/lib/revenue/constants";
 import { computeRecoveryReport, type RecoveryRow, type RecoveryMemberRow } from "@/lib/revenue/recovery";
 import ExportBar from "../export-bar";
 
-function formatArea(value: number, unit: "currency" | "percent") {
-  return unit === "percent"
-    ? `${value.toFixed(1)}%`
-    : value.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
+function formatArea(value: number, unit: "currency" | "percent" | "count") {
+  if (unit === "percent") return `${value.toFixed(1)}%`;
+  if (unit === "count") return value.toLocaleString("en-AU", { maximumFractionDigits: 0 });
+  return value.toLocaleString("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
 }
 
 function varianceClass(variance: number | null) {

@@ -81,6 +81,18 @@ export function buildLineItems(
     }));
   }
 
+  if (report.type === "maxgaming_daily") {
+    const gamingId = lineIdByKey.get("card_usage_gaming");
+    const posId = lineIdByKey.get("card_usage_pos");
+    const membersId = lineIdByKey.get("new_members");
+    const { date, cardUsageGamingPercent, cardUsagePosPercent, newMembers } = report.result;
+    const items: DraftLineItem[] = [];
+    if (gamingId) items.push({ tradeDate: date, revenueLineId: gamingId, extractedValue: cardUsageGamingPercent });
+    if (posId) items.push({ tradeDate: date, revenueLineId: posId, extractedValue: cardUsagePosPercent });
+    if (membersId) items.push({ tradeDate: date, revenueLineId: membersId, extractedValue: newMembers });
+    return items;
+  }
+
   // golf
   const golfId = lineIdByKey.get("golf");
   if (!golfId) return [];

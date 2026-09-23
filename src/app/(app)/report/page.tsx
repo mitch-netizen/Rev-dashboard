@@ -253,7 +253,7 @@ export default async function WeeklyReportPage({
         </div>
 
         <footer className={styles.sourceNote}>
-          Source: SwiftPOS Sales Exc GST · Maxgaming Daily Report (Gaming) · RMS Occupancy (Accommodation is a rate, always averaged). Targets carried forward from the standing pattern.
+          Source: SwiftPOS Sales Exc GST · Maxgaming Daily Report (Gaming) · RMS Occupancy By No Group (Accommodation Revenue, ADR, Occ % — Occ % and ADR are rates, always averaged). Targets carried forward from the standing pattern.
         </footer>
       </div>
     </div>

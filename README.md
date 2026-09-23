@@ -23,8 +23,10 @@ extension (`sniff.ts`):
 - **Maxgaming Daily Report** (Gaming) — the venue's sole gaming source;
   Turnover/Revenue plus Card Usage % (gaming floor and POS) and New
   Members. Dated directly, no offset.
-- **RMS** "Occupancy By No Group" (PDF) — Occ % is matched to the database
-  by its literal date, never assumed to be "this week".
+- **RMS** "Occupancy By No Group" (PDF) — one report, run weekly, gives the
+  full Accommodation picture per day: Occ %, Revenue, and ADR (Nett Avg
+  RevPOR). Each row is matched to the database by its own literal date,
+  never assumed to be "this week".
 - **Golf** booking ledger export (CSV or genuine xlsx) — venue revenue is
   only the credits to account 4000.
 

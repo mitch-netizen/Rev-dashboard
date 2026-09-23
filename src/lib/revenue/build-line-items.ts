@@ -58,12 +58,15 @@ export function buildLineItems(
 
   if (report.type === "rms") {
     const occId = lineIdByKey.get("accommodation_occupancy");
-    if (!occId) return [];
-    return report.result.map((day) => ({
-      tradeDate: day.date,
-      revenueLineId: occId,
-      extractedValue: day.occPercent,
-    }));
+    const revenueId = lineIdByKey.get("accommodation_revenue");
+    const adrId = lineIdByKey.get("accommodation_adr");
+    const items: DraftLineItem[] = [];
+    for (const day of report.result) {
+      if (occId) items.push({ tradeDate: day.date, revenueLineId: occId, extractedValue: day.occPercent });
+      if (revenueId) items.push({ tradeDate: day.date, revenueLineId: revenueId, extractedValue: day.revenue });
+      if (adrId && day.adr !== null) items.push({ tradeDate: day.date, revenueLineId: adrId, extractedValue: day.adr });
+    }
+    return items;
   }
 
   if (report.type === "maxgaming_daily") {

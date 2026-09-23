@@ -21,14 +21,18 @@ export default async function TargetsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Targets</h1>
-        <p className="text-sm text-neutral-500">
-          Standing day-of-week targets for every revenue line and group. Editing here sets the
-          going-forward plan — a week already opened keeps whatever it was seeded with, so past
-          weeks never silently change. Type into a day directly, or use Week / Forecast to fill
-          the row from a total.
+    <div className="space-y-5">
+      <div className="rounded-lg border p-4 sm:p-5" style={{ background: "var(--qr-header-bg)", borderColor: "var(--qr-line)" }}>
+        <h1 className="font-display text-lg font-bold" style={{ color: "var(--qr-header-fg)" }}>
+          Targets
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--qr-gold)" }}>
+          Standing day-of-week targets for every revenue line and group
+        </p>
+        <p className="mt-2 max-w-3xl text-xs" style={{ color: "var(--qr-header-fg)", opacity: 0.75 }}>
+          Editing here sets the going-forward plan — a week already opened keeps whatever it was
+          seeded with, so past weeks never silently change. Type into a day directly, or use Week
+          / Forecast to fill the row from a total.
         </p>
       </div>
       <TargetsGrid areas={areas} targets={targets} weights={weights} lastWeek={lastWeek} />

@@ -3,6 +3,7 @@
 import { Fragment, useState, useTransition } from "react";
 import { upsertStandingTarget, upsertStandingTargetsBulk } from "./actions";
 import { DAY_LABELS } from "@/lib/revenue/constants";
+import { formatArea } from "@/lib/revenue/format";
 import {
   distributeWeeklyTotal,
   distributeMonthlyForecast,
@@ -27,9 +28,8 @@ function currentMonthValue(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatAmount(value: number, unit: "currency" | "percent" | "count"): string {
-  return unit === "percent" ? `${value.toFixed(1)}%` : value.toLocaleString("en-AU", { maximumFractionDigits: 0 });
-}
+const actionBtn =
+  "underline decoration-dotted hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30 disabled:no-underline";
 
 export default function TargetsGrid({
   areas,
@@ -142,59 +142,79 @@ export default function TargetsGrid({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[1080px] border-collapse text-sm">
+    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+      <table className="w-full min-w-[1120px] border-collapse text-sm" style={{ background: "var(--qr-surface)" }}>
         <thead>
           <tr>
-            <th className="sticky left-0 border-b border-neutral-200 bg-white p-2 text-left font-medium dark:border-neutral-800 dark:bg-neutral-900">
+            <th
+              className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide"
+              style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}
+            >
               Area
             </th>
             {DAY_LABELS.map((label) => (
               <th
                 key={label}
-                className="border-b border-neutral-200 p-2 text-right font-medium dark:border-neutral-800"
+                className="p-2.5 text-right text-[0.72rem] font-semibold uppercase tracking-wide"
+                style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}
               >
                 {label.slice(0, 3)}
               </th>
             ))}
-            <th className="border-b border-l border-neutral-200 p-2 text-right font-medium dark:border-neutral-800">
+            <th
+              className="border-l p-2.5 text-right text-[0.72rem] font-semibold uppercase tracking-wide"
+              style={{ background: "var(--qr-green-table)", color: "var(--qr-gold-soft)", borderColor: "var(--qr-line)" }}
+            >
               Week
             </th>
           </tr>
         </thead>
         <tbody>
-          {areas.map((area) => {
+          {areas.map((area, i) => {
             const hasLastWeek = (lastWeek[area.id] ?? []).some((v) => v !== null);
             const weekTotal = weekTotalFor(area);
             const forecastOpen = openForecastAreaId === area.id;
             const preview = forecastOpen ? forecastPreview(area) : null;
+            const prevArea = areas[i - 1];
+            const startsGroupSection = area.kind === "group" && prevArea?.kind !== "group";
 
             return (
               <Fragment key={area.id}>
+                {startsGroupSection && (
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className="p-1.5 pl-2 text-[0.68rem] font-semibold uppercase tracking-wide"
+                      style={{ background: "var(--qr-total-row)", color: "var(--qr-ink-soft)" }}
+                    >
+                      Group targets
+                    </td>
+                  </tr>
+                )}
                 <tr
-                  className={`border-b border-neutral-100 dark:border-neutral-900 ${
-                    area.kind === "group" ? "bg-neutral-50 font-medium dark:bg-neutral-900/40" : ""
-                  }`}
+                  className="border-b"
+                  style={{
+                    borderColor: "var(--qr-line)",
+                    background: area.kind === "group" ? "var(--qr-card-bg)" : i % 2 === 1 ? "var(--qr-row-alt)" : undefined,
+                  }}
                 >
-                  <td className="sticky left-0 bg-inherit p-2 align-top text-neutral-700 dark:text-neutral-300">
-                    <div>
+                  <td
+                    className="sticky left-0 p-2 align-top"
+                    style={{ background: area.kind === "group" ? "var(--qr-card-bg)" : i % 2 === 1 ? "var(--qr-row-alt)" : "var(--qr-surface)" }}
+                  >
+                    <div style={{ color: "var(--qr-ink)", fontWeight: area.kind === "group" ? 600 : undefined }}>
                       {area.label}
                       {area.unit === "percent" ? " (%)" : null}
                     </div>
-                    <div className="mt-1 flex gap-2 text-[11px] font-normal text-neutral-400">
-                      <button
-                        type="button"
-                        onClick={() => handleFillWeek(area)}
-                        className="underline decoration-dotted hover:text-neutral-600 dark:hover:text-neutral-300"
-                        title="Fill every day with Monday's value"
-                      >
+                    <div className="mt-1 flex gap-2 text-[11px]" style={{ color: "var(--qr-ink-faint)" }}>
+                      <button type="button" onClick={() => handleFillWeek(area)} className={actionBtn} title="Fill every day with Monday's value">
                         Fill week
                       </button>
                       <button
                         type="button"
                         onClick={() => handleCopyLastWeek(area)}
                         disabled={!hasLastWeek}
-                        className="underline decoration-dotted hover:text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline dark:hover:text-neutral-300"
+                        className={actionBtn}
                         title="Copy last week's actuals in as this week's targets"
                       >
                         Copy last wk
@@ -205,7 +225,7 @@ export default function TargetsGrid({
                           setOpenForecastAreaId(forecastOpen ? null : area.id);
                           setForecastAmount("");
                         }}
-                        className="underline decoration-dotted hover:text-neutral-600 dark:hover:text-neutral-300"
+                        className={actionBtn}
                         title="Set a monthly forecast and spread it across weekdays"
                       >
                         Forecast…
@@ -223,66 +243,76 @@ export default function TargetsGrid({
                           onBlur={(e) => handleCommit(area, day, e.target.value)}
                           placeholder="—"
                           inputMode="decimal"
-                          className="w-20 rounded border border-transparent bg-transparent px-2 py-1 text-right hover:border-neutral-300 focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none dark:hover:border-neutral-700 dark:focus:bg-neutral-900"
+                          className="w-20 rounded border border-transparent bg-transparent px-2 py-1 text-right focus:border-[var(--qr-gold)] focus:outline-none"
+                          style={{ color: "var(--qr-ink)" }}
                         />
                       </td>
                     );
                   })}
-                  <td className="border-l border-neutral-100 p-1 text-right dark:border-neutral-900">
+                  <td className="border-l p-1 text-right" style={{ borderColor: "var(--qr-line)" }}>
                     <input
                       key={weekTotal ?? "empty"}
                       defaultValue={weekTotal === null ? "" : round2(weekTotal)}
                       onBlur={(e) => handleWeekTotalCommit(area, e.target.value)}
                       placeholder="—"
                       inputMode="decimal"
-                      title={area.isAveraged ? "Average target for the week — sets every day to this value" : "Weekly total — spread across days by historical day-of-week mix"}
-                      className="w-24 rounded border border-transparent bg-transparent px-2 py-1 text-right font-medium hover:border-neutral-300 focus:border-neutral-400 focus:bg-neutral-50 focus:outline-none dark:hover:border-neutral-700 dark:focus:bg-neutral-900"
+                      title={
+                        area.isAveraged
+                          ? "Average target for the week — sets every day to this value"
+                          : "Weekly total — spread across days by historical day-of-week mix"
+                      }
+                      className="w-24 rounded border border-transparent bg-transparent px-2 py-1 text-right font-semibold focus:border-[var(--qr-gold)] focus:outline-none"
+                      style={{ color: "var(--qr-ink)" }}
                     />
                   </td>
                 </tr>
                 {forecastOpen && (
-                  <tr key={`${area.id}-forecast`} className="border-b border-neutral-100 bg-neutral-50 dark:border-neutral-900 dark:bg-neutral-900/60">
+                  <tr key={`${area.id}-forecast`} className="border-b" style={{ borderColor: "var(--qr-line)", background: "var(--qr-gold-soft)" }}>
                     <td colSpan={9} className="p-3">
                       <div className="flex flex-wrap items-end gap-3 text-xs">
-                        <label className="flex flex-col gap-1 text-neutral-500">
+                        <label className="flex flex-col gap-1" style={{ color: "var(--qr-ink-soft)" }}>
                           Month
                           <input
                             type="month"
                             value={forecastMonth}
                             onChange={(e) => setForecastMonth(e.target.value)}
-                            className="rounded border border-neutral-300 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800"
+                            className="rounded border px-2 py-1"
+                            style={{ borderColor: "var(--qr-line)", background: "var(--qr-surface)", color: "var(--qr-ink)" }}
                           />
                         </label>
-                        <label className="flex flex-col gap-1 text-neutral-500">
+                        <label className="flex flex-col gap-1" style={{ color: "var(--qr-ink-soft)" }}>
                           {area.isAveraged ? "Monthly target (avg %)" : "Monthly forecast ($)"}
                           <input
                             inputMode="decimal"
                             autoFocus
                             value={forecastAmount}
                             onChange={(e) => setForecastAmount(e.target.value)}
-                            className="w-32 rounded border border-neutral-300 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800"
+                            className="w-32 rounded border px-2 py-1"
+                            style={{ borderColor: "var(--qr-line)", background: "var(--qr-surface)", color: "var(--qr-ink)" }}
                           />
                         </label>
                         <button
                           type="button"
                           onClick={() => applyForecast(area)}
                           disabled={!preview}
-                          className="rounded bg-neutral-900 px-3 py-1.5 text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-neutral-900"
+                          className="rounded px-3 py-1.5 font-medium disabled:cursor-not-allowed disabled:opacity-40"
+                          style={{ background: "var(--qr-gold)", color: "var(--qr-header-bg)" }}
                         >
                           Apply
                         </button>
                         <button
                           type="button"
                           onClick={() => setOpenForecastAreaId(null)}
-                          className="px-2 py-1.5 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                          className="px-2 py-1.5 hover:opacity-80"
+                          style={{ color: "var(--qr-ink-soft)" }}
                         >
                           Cancel
                         </button>
                         {preview && (
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-neutral-500">
+                          <div className="flex flex-wrap gap-x-3 gap-y-1" style={{ color: "var(--qr-ink-soft)" }}>
                             {DAY_LABELS.map((label, i) => (
                               <span key={label}>
-                                {label.slice(0, 3)} {formatAmount(preview[i], area.unit)}
+                                {label.slice(0, 3)} {formatArea(preview[i], area.unit)}
                               </span>
                             ))}
                           </div>
@@ -296,7 +326,11 @@ export default function TargetsGrid({
           })}
         </tbody>
       </table>
-      {isPending && <p className="mt-2 text-xs text-neutral-400">Saving…</p>}
+      {isPending && (
+        <p className="px-2 py-2 text-xs" style={{ color: "var(--qr-ink-soft)" }}>
+          Saving…
+        </p>
+      )}
     </div>
   );
 }

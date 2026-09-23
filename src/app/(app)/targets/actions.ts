@@ -61,6 +61,8 @@ export async function upsertStandingTarget(target: StandingTargetOf, dayOfWeek: 
   await upsertOneDay(supabase, target, dayOfWeek, amount);
   revalidatePath("/targets");
   revalidatePath("/recovery");
+  revalidatePath("/");
+  revalidatePath("/week-review");
 }
 
 // Same as upsertStandingTarget but for all 7 days in one round trip — backs
@@ -76,4 +78,6 @@ export async function upsertStandingTargetsBulk(target: StandingTargetOf, amount
   await Promise.all(entries.map(([day, amount]) => upsertOneDay(supabase, target, day, amount)));
   revalidatePath("/targets");
   revalidatePath("/recovery");
+  revalidatePath("/");
+  revalidatePath("/week-review");
 }

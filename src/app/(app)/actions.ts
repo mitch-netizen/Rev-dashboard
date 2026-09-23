@@ -47,6 +47,8 @@ export async function upsertDailyActual(
   }
 
   revalidatePath("/");
+  revalidatePath("/week-review");
+  revalidatePath("/recovery");
 }
 
 export async function updateParsedLineItem(itemId: string, correctedValue: number | null) {
@@ -115,6 +117,8 @@ export async function commitSourceDocument(
   if (statusError) throw statusError;
 
   revalidatePath("/");
+  revalidatePath("/week-review");
+  revalidatePath("/recovery");
   redirect("/");
 }
 

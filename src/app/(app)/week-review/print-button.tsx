@@ -5,7 +5,8 @@ export default function PrintButton() {
     <button
       type="button"
       onClick={() => window.print()}
-      className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      className="rounded-md border px-3 py-1.5 text-sm hover:opacity-80"
+      style={{ borderColor: "var(--qr-gold)", color: "var(--qr-gold)" }}
     >
       Print / Save PDF
     </button>

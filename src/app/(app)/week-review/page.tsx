@@ -1,31 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { addDays, toIsoDate } from "@/lib/revenue/constants";
 import { fetchWeeklyReportData, type HeadlineRow } from "@/lib/revenue/weekly-report";
+import { formatArea, formatSigned } from "@/lib/revenue/format";
+import WeekShell from "../week-shell";
 import PrintButton from "./print-button";
 import styles from "./report.module.css";
-
-function formatCurrency(value: number, fractionDigits = 0) {
-  return value.toLocaleString("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  });
-}
-
-function formatArea(value: number, unit: "currency" | "percent" | "count", fractionDigits = 0) {
-  if (unit === "percent") return `${value.toFixed(1)}%`;
-  if (unit === "count") return value.toLocaleString("en-AU", { maximumFractionDigits: 0 });
-  return formatCurrency(value, fractionDigits);
-}
-
-function formatSigned(value: number, unit: "currency" | "percent" | "count") {
-  const sign = value >= 0 ? "+" : "";
-  if (unit === "percent") return `${sign}${value.toFixed(1)}pp`;
-  if (unit === "count") return `${sign}${value.toLocaleString("en-AU", { maximumFractionDigits: 0 })}`;
-  return `${sign}${formatCurrency(value, 0)}`;
-}
 
 function TrendLabel({ row }: { row: HeadlineRow }) {
   if (row.trend === null) {
@@ -64,7 +43,7 @@ function TargetProgress({ row }: { row: HeadlineRow }) {
   return <div className={styles.targetLine}>{pct}% to target</div>;
 }
 
-export default async function WeeklyReportPage({
+export default async function WeekReviewPage({
   searchParams,
 }: {
   searchParams: Promise<{ week?: string }>;
@@ -73,37 +52,11 @@ export default async function WeeklyReportPage({
   const supabase = await createClient();
 
   const data = await fetchWeeklyReportData(supabase, week);
-  const { monday, isCurrentWeek, weekClosed, days, daysReported, generatedLabel, hasAnyTargets, lines, actuals, headline, targetsByHeadlineDay } =
+  const { mondayIso, isCurrentWeek, weekClosed, days, daysReported, generatedLabel, hasAnyTargets, lines, actuals, headline, targetsByHeadlineDay } =
     data;
 
-  const prevWeek = toIsoDate(addDays(monday, -7));
-  const nextWeek = toIsoDate(addDays(monday, 7));
-
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <div>
-          <h1 className="text-xl font-semibold">Weekly Report</h1>
-          <p className="text-sm text-neutral-500">
-            {days[0].label} – {days[6].label}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <Link href={`/report?week=${prevWeek}`} className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900">
-            ← Previous week
-          </Link>
-          {!isCurrentWeek && (
-            <Link href="/report" className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900">
-              This week
-            </Link>
-          )}
-          <Link href={`/report?week=${nextWeek}`} className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900">
-            Next week →
-          </Link>
-          <PrintButton />
-        </div>
-      </div>
-
+    <WeekShell active="review" mondayIso={mondayIso} isCurrentWeek={isCurrentWeek} kpis={headline} actions={<PrintButton />}>
       {!hasAnyTargets && (
         <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
           No targets are set up yet, so this report has nothing to compare against.{" "}
@@ -119,7 +72,13 @@ export default async function WeeklyReportPage({
           <div>
             <h1>The Queens Hotel Gladstone</h1>
             <div className={styles.subtitle}>
-              Weekly Revenue Report — Week Commencing {monday.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
+              Weekly Revenue Report — Week Commencing{" "}
+              {new Date(`${mondayIso}T00:00:00Z`).toLocaleDateString("en-AU", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC",
+              })}
             </div>
           </div>
           <div className={styles.status}>
@@ -256,6 +215,6 @@ export default async function WeeklyReportPage({
           Source: SwiftPOS Sales Exc GST · Maxgaming Daily Report (Gaming) · RMS Occupancy By No Group (Accommodation Revenue, ADR, Occ % — Occ % and ADR are rates, always averaged). Targets carried forward from the standing pattern.
         </footer>
       </div>
-    </div>
+    </WeekShell>
   );
 }

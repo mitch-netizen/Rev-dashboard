@@ -10,29 +10,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 print:hidden">
+      <header className="print:hidden" style={{ background: "var(--qr-header-bg)", borderBottom: "1px solid var(--qr-line)" }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-6">
-            <span className="text-sm font-semibold">The Queens Gladstone</span>
-            <nav className="flex gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-              <Link href="/" className="hover:text-neutral-950 dark:hover:text-white">
-                Current Week
+            <span className="font-display text-sm font-bold" style={{ color: "var(--qr-header-fg)" }}>
+              The Queens Gladstone
+            </span>
+            <nav className="flex gap-4 text-sm">
+              <Link href="/" className="hover:opacity-80" style={{ color: "var(--qr-header-fg)" }}>
+                Week
               </Link>
-              <Link href="/upload" className="hover:text-neutral-950 dark:hover:text-white">
+              <Link href="/upload" className="hover:opacity-80" style={{ color: "var(--qr-header-fg)" }}>
                 Upload
               </Link>
-              <Link href="/recovery" className="hover:text-neutral-950 dark:hover:text-white">
-                Recovery
-              </Link>
-              <Link href="/report" className="hover:text-neutral-950 dark:hover:text-white">
-                Weekly Report
-              </Link>
-              <Link href="/targets" className="hover:text-neutral-950 dark:hover:text-white">
+              <Link href="/targets" className="hover:opacity-80" style={{ color: "var(--qr-header-fg)" }}>
                 Targets
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-3 text-sm text-neutral-500">
+          <div className="flex items-center gap-3 text-sm" style={{ color: "var(--qr-header-fg)", opacity: 0.75 }}>
             <span>{user?.email}</span>
             <SignOutButton />
           </div>

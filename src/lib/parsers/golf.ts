@@ -157,8 +157,8 @@ function cellToText(value: unknown): string {
 // The golf booking platform also lets this same ledger be exported as a
 // genuine .xlsx (as opposed to the CSV/disguised-text form parseGolfLedger
 // handles). Returns null — rather than throwing — when the workbook's
-// header doesn't look like this ledger at all, so detectAndParse can fall
-// back to Net Meter, the only other known genuine-.xlsx report.
+// header doesn't look like this ledger at all, so detectAndParse can report
+// an unrecognised-report error instead of a raw parse failure.
 export async function tryParseGolfXlsx(buffer: Buffer): Promise<GolfDayResult[] | null> {
   const ExcelJS = (await import("exceljs")).default;
   const workbook = new ExcelJS.Workbook();

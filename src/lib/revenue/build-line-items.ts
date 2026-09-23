@@ -56,21 +56,6 @@ export function buildLineItems(
     return items;
   }
 
-  if (report.type === "netmeter") {
-    const turnoverId = lineIdByKey.get("gaming_turnover");
-    const revenueId = lineIdByKey.get("gaming_revenue");
-    const items: DraftLineItem[] = [];
-    for (const day of report.result) {
-      if (turnoverId) {
-        items.push({ tradeDate: day.date, revenueLineId: turnoverId, extractedValue: day.turnover });
-      }
-      if (revenueId) {
-        items.push({ tradeDate: day.date, revenueLineId: revenueId, extractedValue: day.revenue });
-      }
-    }
-    return items;
-  }
-
   if (report.type === "rms") {
     const occId = lineIdByKey.get("accommodation_occupancy");
     if (!occId) return [];
@@ -82,11 +67,15 @@ export function buildLineItems(
   }
 
   if (report.type === "maxgaming_daily") {
+    const turnoverId = lineIdByKey.get("gaming_turnover");
+    const revenueId = lineIdByKey.get("gaming_revenue");
     const gamingId = lineIdByKey.get("card_usage_gaming");
     const posId = lineIdByKey.get("card_usage_pos");
     const membersId = lineIdByKey.get("new_members");
-    const { date, cardUsageGamingPercent, cardUsagePosPercent, newMembers } = report.result;
+    const { date, turnover, revenue, cardUsageGamingPercent, cardUsagePosPercent, newMembers } = report.result;
     const items: DraftLineItem[] = [];
+    if (turnoverId) items.push({ tradeDate: date, revenueLineId: turnoverId, extractedValue: turnover });
+    if (revenueId) items.push({ tradeDate: date, revenueLineId: revenueId, extractedValue: revenue });
     if (gamingId) items.push({ tradeDate: date, revenueLineId: gamingId, extractedValue: cardUsageGamingPercent });
     if (posId) items.push({ tradeDate: date, revenueLineId: posId, extractedValue: cardUsagePosPercent });
     if (membersId) items.push({ tradeDate: date, revenueLineId: membersId, extractedValue: newMembers });

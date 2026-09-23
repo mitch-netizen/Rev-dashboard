@@ -1,16 +1,19 @@
 // Maxgaming "Daily Report" PDF (the venue's own export/print of the portal
 // page at ld.maxgaming.com.au, not a screenshot — it carries a real text
-// layer). Covers exactly one trade day. Turnover/Revenue on this report
-// duplicate what Net Meter already supplies, so only the fields Net Meter
-// doesn't have are extracted: Card Usage % for the gaming floor and for POS
-// tills, and New Members.
+// layer). Covers exactly one trade day. This is now the sole gaming source
+// (Net Meter is retired) — venue-wide Turnover/Revenue plus Card Usage %
+// for the gaming floor and for POS tills, plus New Members.
 //
-// Each of those three lines appears exactly once in the document, so no
-// section-tracking is needed to disambiguate "Card Usage" (Carded Gaming)
-// from "Carded Spend" (POS) — their labels are already unique.
+// "Turnover" and "Revenue" each appear twice — once venue-wide near the top
+// of the report, once again under "Carded Gaming"/"POS" for the carded-only
+// subset — so those two are read from the lines before the "Carded Gaming"
+// section header. "Card Usage", "Carded Spend" and "New Members" each
+// appear only once, so no section-tracking is needed for those.
 
 export interface MaxgamingDailyResult {
   date: string; // ISO yyyy-mm-dd
+  turnover: number;
+  revenue: number;
   cardUsageGamingPercent: number;
   cardUsagePosPercent: number;
   newMembers: number;
@@ -22,6 +25,15 @@ function parseNumericAuDate(raw: string): string | null {
   if (!match) return null;
   const [, d, m, y] = match;
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+// "Turnover 177,263 196,238 10.7%" -> 6wk avg / today / diff — today (the
+// second number) is what we want.
+function findTodayValue(lines: string[], label: string): number | null {
+  const line = lines.find((l) => new RegExp(`^${label}\\s`).test(l));
+  const match = line?.match(new RegExp(`^${label}\\s+[\\d,]+\\s+([\\d,]+)`));
+  if (!match) return null;
+  return Number(match[1].replace(/,/g, ""));
 }
 
 export function parseMaxgamingDaily(text: string): MaxgamingDailyResult {
@@ -36,6 +48,15 @@ export function parseMaxgamingDaily(text: string): MaxgamingDailyResult {
     }
   }
   if (!date) throw new Error("Could not find the report date in Maxgaming Daily Report");
+
+  const cardedGamingIndex = lines.findIndex((l) => l === "Carded Gaming");
+  const topLevelLines = cardedGamingIndex === -1 ? lines : lines.slice(0, cardedGamingIndex);
+
+  const turnover = findTodayValue(topLevelLines, "Turnover");
+  if (turnover === null) throw new Error("Could not find Turnover in Maxgaming Daily Report");
+
+  const revenue = findTodayValue(topLevelLines, "Revenue");
+  if (revenue === null) throw new Error("Could not find Revenue in Maxgaming Daily Report");
 
   // "Card Usage 42.3% 32.9% -9.4%" -> 6wk avg / today / diff — today is the
   // middle value.
@@ -56,9 +77,15 @@ export function parseMaxgamingDaily(text: string): MaxgamingDailyResult {
   if (!newMembersMatch) throw new Error("Could not find New Members in Maxgaming Daily Report");
   const newMembers = Number(newMembersMatch[1]);
 
-  if (Number.isNaN(cardUsageGamingPercent) || Number.isNaN(cardUsagePosPercent) || Number.isNaN(newMembers)) {
+  if (
+    Number.isNaN(turnover) ||
+    Number.isNaN(revenue) ||
+    Number.isNaN(cardUsageGamingPercent) ||
+    Number.isNaN(cardUsagePosPercent) ||
+    Number.isNaN(newMembers)
+  ) {
     throw new Error("Maxgaming Daily Report had non-numeric values where numbers were expected");
   }
 
-  return { date, cardUsageGamingPercent, cardUsagePosPercent, newMembers };
+  return { date, turnover, revenue, cardUsageGamingPercent, cardUsagePosPercent, newMembers };
 }

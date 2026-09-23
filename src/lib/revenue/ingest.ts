@@ -5,7 +5,6 @@ import { buildLineItems } from "./build-line-items";
 
 const SOURCE_BY_DOCUMENT_TYPE: Record<string, string> = {
   swiftpos: "parsed_swiftpos",
-  netmeter: "parsed_netmeter",
   rms: "parsed_rms",
   golf: "parsed_golf",
   maxgaming_daily: "parsed_maxgaming_daily",

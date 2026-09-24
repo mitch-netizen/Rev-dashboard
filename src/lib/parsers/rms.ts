@@ -3,22 +3,22 @@
 // a forward-looking week or a just-closed one, so each row is matched to
 // the database by its own literal date, never assumed to be "this week".
 //
-// Real exports glue every numeric column onto the date with no separating
-// whitespace at all (PDF text extraction preserves reading order but not
-// the visual column gaps), so columns can't be split on whitespace. What's
-// reliable instead: the row always ends with the same 8 decimal-formatted
-// fields, in this fixed order —
-//   Nett Avg (RevPOR), Gross Avg (RevPOR), Nett Revenue, Gross Revenue,
-//   Taxes, Discount, Occ %, RevPAR
-// — regardless of how many optional lead-in fields (Occupants, Conf %, Avg
-// LOS) happen to render before them. Counting from the end of the decimal
-// tokens is therefore stable even though the front of the row isn't.
-// Nett Avg (RevPOR) — Nett Revenue / Room Nights Sold — is exactly the
-// venue's ADR; Nett Revenue is Accommodation Revenue. Both are ex-GST,
-// matching every other revenue line (e.g. SwiftPOS's "Sales Exc GST").
-// Verified against real report exports: for every row, Nett Revenue /
-// Nett Avg (RevPOR) recovers the integer room-nights-sold figure, and
-// Gross figures are exactly 1.1x their Nett counterpart (10% GST).
+// Column order, after the date, as this app's own PDF text extraction
+// (pdf-text.ts — Y/X-position clustering, not a raw text-run dump) lays
+// it out, matching the report's real left-to-right visual columns:
+//   Room, Avail, Maint, Used, Unused, RevPAR, Occ %, Discount, Taxes,
+//   Gross Revenue, Nett Revenue, Gross Avg (RevPOR), Nett Avg (RevPOR),
+//   Avg LOS, Conf %, Occupants
+// Verified against four real report exports (28 days total) via the
+// project's actual extractPdfText, not a standalone text dump — a naive
+// dump of the PDF's own text-run order comes out with these columns
+// reversed and glued together with no whitespace, which is a trap: it
+// reads plausibly but does not match what this app actually feeds the
+// parser at runtime.
+//
+// Nett Revenue is Accommodation Revenue (ex-GST, matching every other
+// revenue line); Nett Avg (RevPOR) — Nett Revenue / Room Nights Sold — is
+// exactly ADR.
 
 export interface RmsDayResult {
   date: string; // ISO yyyy-mm-dd
@@ -31,8 +31,6 @@ const MONTHS = [
   "jan", "feb", "mar", "apr", "may", "jun",
   "jul", "aug", "sep", "oct", "nov", "dec",
 ];
-
-const DECIMAL_RE = /-?\d{1,3}(?:,\d{3})*\.\d{2}/g;
 
 // "31 Aug 2026" -> "2026-08-31"
 function shortAuDateToIso(raw: string): string | null {
@@ -60,14 +58,12 @@ export function parseRms(text: string): RmsDayResult[] {
     const iso = shortAuDateToIso(match[1]);
     if (!iso) continue;
 
-    const decimals = [...match[2].matchAll(DECIMAL_RE)].map((m) => m[0]);
-    if (decimals.length < 8) continue;
-    const [nettAvgRevporRaw, , nettRevenueRaw, , , , occPercentRaw] = decimals.slice(-8);
-
-    const nettAvgRevpor = parseAuNumber(nettAvgRevporRaw);
-    const revenue = parseAuNumber(nettRevenueRaw);
-    const occPercent = parseAuNumber(occPercentRaw);
-    if ([nettAvgRevpor, revenue, occPercent].some((n) => Number.isNaN(n))) continue;
+    const numbers = match[2].trim().split(/\s+/);
+    if (numbers.length < 13) continue;
+    const occPercent = parseAuNumber(numbers[6]);
+    const revenue = parseAuNumber(numbers[10]);
+    const nettAvgRevpor = parseAuNumber(numbers[12]);
+    if ([occPercent, revenue, nettAvgRevpor].some((n) => Number.isNaN(n))) continue;
 
     // "<date> Total:" rows repeat the same date+figures under the weekday
     // section header — first occurrence (the plain date row) wins, dedupe

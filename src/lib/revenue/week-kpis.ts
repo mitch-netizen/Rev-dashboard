@@ -2,11 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { VENUE_ID, venueNow, mondayOf, addDays, toIsoDate } from "./constants";
 import { ensureWeekTargetsSeeded, fetchAreas, type Area } from "./targets";
 
-// The five headline areas the dashboard leads with, in display order — two
-// individual lines plus the three group targets. There's no schema flag for
-// "headline"; these keys are the ones the venue actually reports on.
-export const HEADLINE_KEYS = ["gaming_turnover", "all_bars", "all_food", "retail", "accommodation_occupancy"];
-
 export interface HeadlineRow {
   area: Area;
   weeklyTarget: number | null;
@@ -54,9 +49,9 @@ export function computeHeadlineRows(
   actualsByLineDate: Map<string, Map<string, number>>,
   prevActualsByLineDate: Map<string, Map<string, number>>
 ): HeadlineRow[] {
-  const headlineAreas = HEADLINE_KEYS.map((key) => areas.find((a) => a.key === key)).filter(
-    (a): a is Area => a !== undefined
-  );
+  // A KPI card for any area that actually has a target this week — no fixed
+  // "headline" list. areas is already in display order, so this preserves it.
+  const headlineAreas = areas.filter((a) => targetsByAreaDay.has(a.id));
 
   function sumTarget(areaId: string, dayList: DayLike[]) {
     const byDay = targetsByAreaDay.get(areaId);

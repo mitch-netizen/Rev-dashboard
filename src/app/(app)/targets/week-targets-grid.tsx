@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useTransition } from "react";
-import { upsertStandingTarget, upsertStandingTargetsBulk } from "./actions";
+import { upsertWeeklyTarget, upsertWeeklyTargetsBulk } from "./week-actions";
 import { DAY_LABELS } from "@/lib/revenue/constants";
 import { formatArea } from "@/lib/revenue/format";
 import {
@@ -13,9 +13,9 @@ import {
 } from "@/lib/revenue/target-distribution";
 import type { Area } from "@/lib/revenue/targets";
 
-type StandingTargetOf = { revenueLineId: string; groupId: null } | { revenueLineId: null; groupId: string };
+type TargetOf = { revenueLineId: string; groupId: null } | { revenueLineId: null; groupId: string };
 
-function targetFor(area: Area): StandingTargetOf {
+function targetFor(area: Area): TargetOf {
   return area.kind === "line" ? { revenueLineId: area.id, groupId: null } : { revenueLineId: null, groupId: area.id };
 }
 
@@ -31,12 +31,14 @@ function currentMonthValue(): string {
 const actionBtn =
   "underline decoration-dotted hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30 disabled:no-underline";
 
-export default function TargetsGrid({
+export default function WeekTargetsGrid({
+  weekId,
   areas,
   targets,
   weights,
   lastWeek,
 }: {
+  weekId: string;
   areas: Area[];
   targets: Record<string, number>; // key = `${areaId}|${dayOfWeek}`
   weights: Record<string, DayOfWeekWeights>;
@@ -64,7 +66,7 @@ export default function TargetsGrid({
       return next;
     });
     startTransition(() => {
-      upsertStandingTargetsBulk(targetFor(area), amounts);
+      upsertWeeklyTargetsBulk(weekId, targetFor(area), amounts);
     });
   }
 
@@ -82,7 +84,7 @@ export default function TargetsGrid({
     });
 
     startTransition(() => {
-      upsertStandingTarget(targetFor(area), day, parsed);
+      upsertWeeklyTarget(weekId, targetFor(area), day, parsed);
     });
   }
 

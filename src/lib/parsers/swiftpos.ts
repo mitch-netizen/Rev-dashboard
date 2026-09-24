@@ -38,7 +38,7 @@ export function parseSwiftpos(text: string): SwiftposParseResult {
   const lines = text.split("\n");
   const locationHeaderRe = /^Location\s*:\s*(\d+)\s*-\s*(.+)$/;
   const lineItemRe =
-    /^(\d+)\s+(LIQUOR|FOOD|SUNDRIES)\s+[\d,]+\s+\$-?[\d,.]+\s+\$-?[\d,.]+\s+\$(-?[\d,.]+)\s+\$-?[\d,.]+\s+-?[\d.]+%$/;
+    /^(\d+)\s+(LIQUOR|FOOD|SUNDRIES)\s+[\d,.]+\s+\$-?[\d,.]+\s+\$-?[\d,.]+\s+\$(-?[\d,.]+)\s+\$-?[\d,.]+\s+-?[\d.]+%$/;
 
   const locations: SwiftposLocationResult[] = [];
   let current: SwiftposLocationResult | null = null;

@@ -21,6 +21,8 @@ function KpiCard({ row }: { row: HeadlineRow }) {
     row.actual !== null && row.weeklyTarget !== null && row.weeklyTarget !== 0
       ? Math.round((row.actual / row.weeklyTarget) * 100)
       : null;
+  const trendUp = row.trend !== null && row.trend >= 0;
+  const trendSuffix = row.area.isAveraged ? "pp" : "%";
 
   return (
     <div
@@ -52,6 +54,18 @@ function KpiCard({ row }: { row: HeadlineRow }) {
             style={{ color: row.isBehind ? "var(--qr-red-status-fg)" : "var(--qr-green-status-fg)" }}
           >
             {formatSigned(row.variance, row.area.unit)}
+          </span>
+        )}
+      </div>
+      <div className="mt-0.5 text-xs font-medium" style={{ color: "var(--qr-ink-faint)" }}>
+        {row.trend === null ? (
+          "No prior week data"
+        ) : (
+          <span style={{ color: trendUp ? "var(--qr-green-status-fg)" : "var(--qr-red-status-fg)" }}>
+            {trendUp ? "▲ +" : "▼ −"}
+            {Math.abs(row.trend).toFixed(1)}
+            {trendSuffix}
+            <span style={{ color: "var(--qr-ink-faint)", fontWeight: 400 }}> vs last wk</span>
           </span>
         )}
       </div>

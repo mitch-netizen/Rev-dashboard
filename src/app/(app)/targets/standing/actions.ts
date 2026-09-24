@@ -59,6 +59,10 @@ async function upsertOneDay(
 export async function upsertStandingTarget(target: StandingTargetOf, dayOfWeek: number, amount: number | null) {
   const supabase = await createClient();
   await upsertOneDay(supabase, target, dayOfWeek, amount);
+  revalidatePath("/targets/standing");
+  // A not-yet-opened week seeds itself from the standing pattern the first
+  // time it's viewed, so these need refreshing too even though this action
+  // never touches rev_weekly_targets directly.
   revalidatePath("/targets");
   revalidatePath("/recovery");
   revalidatePath("/");
@@ -76,6 +80,7 @@ export async function upsertStandingTargetsBulk(target: StandingTargetOf, amount
     .map((amount, day) => [day, amount] as const)
     .filter((entry): entry is [number, number | null] => entry[1] !== undefined);
   await Promise.all(entries.map(([day, amount]) => upsertOneDay(supabase, target, day, amount)));
+  revalidatePath("/targets/standing");
   revalidatePath("/targets");
   revalidatePath("/recovery");
   revalidatePath("/");

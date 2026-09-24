@@ -23,9 +23,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Link href="/upload" className="hover:opacity-80" style={{ color: "var(--qr-header-fg)" }}>
                 Upload
               </Link>
-              <Link href="/targets" className="hover:opacity-80" style={{ color: "var(--qr-header-fg)" }}>
-                Targets
-              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm" style={{ color: "var(--qr-header-fg)", opacity: 0.75 }}>

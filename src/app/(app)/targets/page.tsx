@@ -1,41 +1,49 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { fetchAreas, fetchTargetHelpers } from "@/lib/revenue/targets";
-import TargetsGrid from "./targets-grid";
+import { fetchWeekTargetsData } from "@/lib/revenue/week-targets";
+import { fetchWeekKpis } from "@/lib/revenue/week-kpis";
+import WeekShell from "../week-shell";
+import WeekTargetsGrid from "./week-targets-grid";
+import ResetWeekButton from "./reset-week-button";
 
-export default async function TargetsPage() {
+export default async function TargetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
+  const { week } = await searchParams;
   const supabase = await createClient();
-  const areas = await fetchAreas(supabase);
 
-  const [{ data: standing }, { weights, lastWeek }] = await Promise.all([
-    supabase
-      .from("rev_standing_targets")
-      .select("revenue_line_id, group_id, day_of_week, amount")
-      .is("effective_to", null),
-    fetchTargetHelpers(supabase, areas),
+  const [{ mondayIso, isCurrentWeek, weekId, areas, targets, weights, lastWeek }, { headline }] = await Promise.all([
+    fetchWeekTargetsData(supabase, week),
+    fetchWeekKpis(supabase, week),
   ]);
 
-  const targets: Record<string, number> = {};
-  for (const row of standing ?? []) {
-    const areaId = row.revenue_line_id ?? row.group_id;
-    targets[`${areaId}|${row.day_of_week}`] = Number(row.amount);
-  }
-
   return (
-    <div className="space-y-5">
-      <div className="rounded-lg border p-4 sm:p-5" style={{ background: "var(--qr-header-bg)", borderColor: "var(--qr-line)" }}>
-        <h1 className="font-display text-lg font-bold" style={{ color: "var(--qr-header-fg)" }}>
-          Targets
-        </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--qr-gold)" }}>
-          Standing day-of-week targets for every revenue line and group
-        </p>
-        <p className="mt-2 max-w-3xl text-xs" style={{ color: "var(--qr-header-fg)", opacity: 0.75 }}>
-          Editing here sets the going-forward plan — a week already opened keeps whatever it was
-          seeded with, so past weeks never silently change. Type into a day directly, or use Week
-          / Forecast to fill the row from a total.
-        </p>
-      </div>
-      <TargetsGrid areas={areas} targets={targets} weights={weights} lastWeek={lastWeek} />
-    </div>
+    <WeekShell
+      active="targets"
+      mondayIso={mondayIso}
+      isCurrentWeek={isCurrentWeek}
+      kpis={headline}
+      actions={weekId ? <ResetWeekButton weekId={weekId} /> : undefined}
+    >
+      <p className="text-sm print:hidden" style={{ color: "var(--qr-ink-soft)" }}>
+        Editing here changes only this week — the{" "}
+        <Link href="/targets/standing" className="underline">
+          standing pattern
+        </Link>{" "}
+        that seeds future weeks is separate. Type into a day directly, or use Week / Fill week /
+        Copy last wk / Forecast to fill a row from a total.
+      </p>
+
+      {weekId ? (
+        <WeekTargetsGrid weekId={weekId} areas={areas} targets={targets} weights={weights} lastWeek={lastWeek} />
+      ) : (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          This week hasn&apos;t been opened yet and you don&apos;t have permission to seed it —
+          ask an admin or manager to open it first.
+        </div>
+      )}
+    </WeekShell>
   );
 }

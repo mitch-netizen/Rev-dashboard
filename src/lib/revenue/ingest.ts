@@ -28,7 +28,7 @@ export async function ingestReportFile(
     supabase.from("rev_revenue_lines").select("id, key").eq("venue_id", VENUE_ID),
     supabase
       .from("rev_pos_location_mapping")
-      .select("pos_location_number, liquor_line_id, food_line_id")
+      .select("pos_location_number, liquor_line_id, food_line_id, premise")
       .eq("venue_id", VENUE_ID),
   ]);
 

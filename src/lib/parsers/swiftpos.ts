@@ -8,6 +8,7 @@ export interface SwiftposLocationResult {
   posLocationNumber: number;
   locationName: string;
   liquorSalesExc: number | null;
+  liquorGp: number | null; // $ gross profit on liquor, from the report's own GP column
   foodSalesExc: number | null;
 }
 
@@ -37,8 +38,9 @@ export function parseSwiftpos(text: string): SwiftposParseResult {
 
   const lines = text.split("\n");
   const locationHeaderRe = /^Location\s*:\s*(\d+)\s*-\s*(.+)$/;
+  // Qty, Cost, Sales Inc, Sales Exc (captured), GP (captured), GP %.
   const lineItemRe =
-    /^(\d+)\s+(LIQUOR|FOOD|SUNDRIES)\s+[\d,.]+\s+\$-?[\d,.]+\s+\$-?[\d,.]+\s+\$(-?[\d,.]+)\s+\$-?[\d,.]+\s+-?[\d.]+%$/;
+    /^(\d+)\s+(LIQUOR|FOOD|SUNDRIES)\s+[\d,.]+\s+\$-?[\d,.]+\s+\$-?[\d,.]+\s+\$(-?[\d,.]+)\s+\$(-?[\d,.]+)\s+-?[\d.]+%$/;
 
   const locations: SwiftposLocationResult[] = [];
   let current: SwiftposLocationResult | null = null;
@@ -51,6 +53,7 @@ export function parseSwiftpos(text: string): SwiftposParseResult {
         posLocationNumber: Number(headerMatch[1]),
         locationName: headerMatch[2].trim(),
         liquorSalesExc: null,
+        liquorGp: null,
         foodSalesExc: null,
       };
       continue;
@@ -72,9 +75,12 @@ export function parseSwiftpos(text: string): SwiftposParseResult {
 
     const itemMatch = line.match(lineItemRe);
     if (itemMatch) {
-      const [, , label, salesExc] = itemMatch;
+      const [, , label, salesExc, gp] = itemMatch;
       const value = parseMoney(salesExc);
-      if (label === "LIQUOR") current.liquorSalesExc = value;
+      if (label === "LIQUOR") {
+        current.liquorSalesExc = value;
+        current.liquorGp = parseMoney(gp);
+      }
       if (label === "FOOD") current.foodSalesExc = value;
       // SUNDRIES is not one of the tracked revenue lines — ignored.
     }

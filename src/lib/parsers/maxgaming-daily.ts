@@ -28,10 +28,12 @@ function parseNumericAuDate(raw: string): string | null {
 }
 
 // "Turnover 177,263 196,238 10.7%" -> 6wk avg / today / diff — today (the
-// second number) is what we want.
+// second number) is what we want. Revenue in particular can go negative on
+// a day the floor pays out more than it takes, so both figures allow a
+// leading minus sign.
 function findTodayValue(lines: string[], label: string): number | null {
   const line = lines.find((l) => new RegExp(`^${label}\\s`).test(l));
-  const match = line?.match(new RegExp(`^${label}\\s+[\\d,]+\\s+([\\d,]+)`));
+  const match = line?.match(new RegExp(`^${label}\\s+-?[\\d,]+\\s+(-?[\\d,]+)`));
   if (!match) return null;
   return Number(match[1].replace(/,/g, ""));
 }

@@ -15,6 +15,7 @@ interface PosLocationRef {
   pos_location_number: number;
   liquor_line_id: string | null;
   food_line_id: string | null;
+  premise: "on" | "off" | null;
 }
 
 export function buildLineItems(
@@ -53,6 +54,38 @@ export function buildLineItems(
         });
       }
     }
+
+    // Liquor GP % blended per premise bucket: sum(GP $) / sum(Sales Exc)
+    // across every mapped location in the bucket, never an average of each
+    // location's own GP% (which would misweight low- and high-volume
+    // locations equally).
+    const premiseTotals: Record<"on" | "off", { salesExc: number; gp: number }> = {
+      on: { salesExc: 0, gp: 0 },
+      off: { salesExc: 0, gp: 0 },
+    };
+    for (const loc of report.result.locations) {
+      const mapping = posMap.get(loc.posLocationNumber)!;
+      if (!mapping.premise || loc.liquorSalesExc === null || loc.liquorGp === null) continue;
+      premiseTotals[mapping.premise].salesExc += loc.liquorSalesExc;
+      premiseTotals[mapping.premise].gp += loc.liquorGp;
+    }
+    const onPremiseId = lineIdByKey.get("liquor_gp_on_premise");
+    const offPremiseId = lineIdByKey.get("liquor_gp_off_premise");
+    if (onPremiseId && premiseTotals.on.salesExc !== 0) {
+      items.push({
+        tradeDate: report.result.tradeDate,
+        revenueLineId: onPremiseId,
+        extractedValue: (premiseTotals.on.gp / premiseTotals.on.salesExc) * 100,
+      });
+    }
+    if (offPremiseId && premiseTotals.off.salesExc !== 0) {
+      items.push({
+        tradeDate: report.result.tradeDate,
+        revenueLineId: offPremiseId,
+        extractedValue: (premiseTotals.off.gp / premiseTotals.off.salesExc) * 100,
+      });
+    }
+
     return items;
   }
 

@@ -90,4 +90,43 @@ body {
   table {
     font-size: 9pt;
   }
+
+  /* The Daily Actuals grid (Entry tab) is sized generously on screen —
+     min-width 980px plus a horizontal scrollbar — so typing numbers stays
+     comfortable on a laptop. A printed page has no scrollbar, and mobile
+     print dialogs commonly ignore the @page orientation above and print
+     portrait regardless, so without this the grid's extra columns (Week to
+     date, plus the longer new Liquor GP % row labels) get silently clipped
+     past the page edge. table-layout: fixed with an explicit label-column
+     width forces every column to share the page's actual printable width
+     instead of the grid's screen width. */
+  .week-grid-wrap {
+    overflow: visible;
+  }
+
+  .week-grid-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 7.5pt;
+  }
+
+  .week-grid-table th,
+  .week-grid-table td {
+    position: static;
+    padding: 2px 3px;
+    overflow-wrap: break-word;
+  }
+
+  .week-grid-table th:first-child,
+  .week-grid-table td:first-child {
+    width: 20%;
+  }
+
+  .week-grid-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    font-size: 7.5pt;
+  }
 }

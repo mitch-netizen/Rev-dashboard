@@ -65,8 +65,11 @@ export default function WeekGrid({
   );
 
   return (
-    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
-      <table className="w-full min-w-[980px] border-collapse text-sm" style={{ background: "var(--qr-surface)" }}>
+    <div className="week-grid-wrap overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+      <table
+        className="week-grid-table w-full min-w-[980px] border-collapse text-sm"
+        style={{ background: "var(--qr-surface)" }}
+      >
         <thead>
           <tr>
             <th
@@ -120,7 +123,7 @@ export default function WeekGrid({
                         onBlur={(e) => handleCommit(d.date, line.id, e.target.value)}
                         placeholder="—"
                         inputMode="decimal"
-                        className="w-24 rounded border border-transparent bg-transparent px-2 py-1 text-right focus:border-[var(--qr-gold)] focus:outline-none"
+                        className="week-grid-input w-24 rounded border border-transparent bg-transparent px-2 py-1 text-right focus:border-[var(--qr-gold)] focus:outline-none"
                         style={{ color: "var(--qr-ink)" }}
                       />
                       {line.unit === "percent" && value !== undefined ? "%" : null}

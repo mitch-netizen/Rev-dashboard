@@ -324,4 +324,37 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  /* Daily Actuals has one column per revenue line (~19, plus Day) — wide
+     enough on screen to need its own horizontal scrollbar. A printed page
+     has no scrollbar, so without this the columns past the page edge (and
+     the scrollbar track itself) were getting baked into the printed output
+     instead of being reflowed. table-layout: fixed forces every column to
+     share the page's actual printable width; values wrap to a second line
+     rather than being clipped when a cell is too narrow for one. */
+  .dailyActualsScroll {
+    overflow: visible;
+  }
+  table.dailyActualsTable {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 0.48rem;
+  }
+  .dailyActualsTable thead th {
+    padding: 1px 2px;
+    font-size: 0.44rem;
+    white-space: normal;
+    border-left: 1px solid rgba(245, 240, 230, 0.45);
+  }
+  .dailyActualsTable tbody td {
+    padding: 1px 2px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    border-left: 1px solid var(--qr-line);
+  }
+  .dailyActualsTable thead th:first-child,
+  .dailyActualsTable tbody td:first-child {
+    width: 7%;
+    border-left: none;
+  }
 }

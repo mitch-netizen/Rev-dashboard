@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchWeeklyReportData, type HeadlineRow } from "@/lib/revenue/weekly-report";
-import { formatArea, formatSigned } from "@/lib/revenue/format";
+import { abbreviateLineLabel, formatArea, formatSigned } from "@/lib/revenue/format";
 import WeekShell from "../week-shell";
 import PrintButton from "./print-button";
 import styles from "./report.module.css";
@@ -114,13 +114,13 @@ export default async function WeekReviewPage({
 
         <section className={styles.block}>
           <h2>Daily Actuals — Monday to Sunday</h2>
-          <div className={styles.tableScroll}>
-            <table>
+          <div className={`${styles.tableScroll} ${styles.dailyActualsScroll}`}>
+            <table className={styles.dailyActualsTable}>
               <thead>
                 <tr>
                   <th>Day</th>
                   {lines.map((line) => (
-                    <th key={line.id}>{line.label}</th>
+                    <th key={line.id}>{abbreviateLineLabel(line.label)}</th>
                   ))}
                 </tr>
               </thead>
@@ -130,14 +130,14 @@ export default async function WeekReviewPage({
                     <td>{d.label}</td>
                     {lines.map((line) => {
                       const value = actuals[`${d.date}|${line.id}`];
-                      return <td key={line.id}>{value !== undefined ? formatArea(value, line.unit, 2) : "—"}</td>;
+                      return <td key={line.id}>{value !== undefined ? formatArea(value, line.unit, 0) : "—"}</td>;
                     })}
                   </tr>
                 ))}
                 <tr className={styles.totalRow}>
                   <td>Week Total / Avg</td>
                   {lines.map((line) => (
-                    <td key={line.id}>{line.weekTotal !== null ? formatArea(line.weekTotal, line.unit, 2) : "—"}</td>
+                    <td key={line.id}>{line.weekTotal !== null ? formatArea(line.weekTotal, line.unit, 0) : "—"}</td>
                   ))}
                 </tr>
               </tbody>

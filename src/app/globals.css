@@ -75,9 +75,16 @@ body {
     margin: 10mm;
   }
 
-  body {
-    background: #ffffff;
-    color: #000000;
+  /* Mobile Safari/Chrome skip background colors and images by default when
+     printing (an ink-saving "economy mode"), which is what silently drops
+     the KPI card backgrounds, status pill colors and table row shading from
+     a phone's Print > Save as PDF — this forces them to render. Applied via
+     the universal selector rather than just :root/body because print-color-
+     adjust's inheritance has historically been unreliable in WebKit. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
   }
 
   table {

@@ -114,8 +114,8 @@ export default async function WeekReviewPage({
 
         <section className={styles.block}>
           <h2>Daily Actuals — Monday to Sunday</h2>
-          <div className={styles.tableScroll}>
-            <table>
+          <div className={`${styles.tableScroll} ${styles.dailyActualsScroll}`}>
+            <table className={styles.dailyActualsTable}>
               <thead>
                 <tr>
                   <th>Day</th>

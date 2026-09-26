@@ -42,6 +42,20 @@ export type RecoverySection =
   | { kind: "standalone"; row: RecoveryRow }
   | { kind: "group"; group: RecoveryGroup };
 
+// Target vs. actual for one targeted area on one specific day (as opposed to
+// RecoveryRow, which is accrued/averaged across the whole week-to-date).
+export interface YesterdayResult {
+  area: Area;
+  target: number;
+  actual: number | null; // null when that day's actual hasn't been entered
+  met: boolean; // actual !== null && actual >= target
+}
+
+export interface RecoveryYesterday {
+  day: RecoveryDay;
+  results: YesterdayResult[];
+}
+
 export interface RecoveryReport {
   monday: Date;
   mondayIso: string;
@@ -53,6 +67,12 @@ export interface RecoveryReport {
   // kept separate so they never masquerade as an on/ahead-of-target line.
   ungroupedRows: RecoveryMemberRow[];
   remainingDaysCount: number;
+  // The most recently elapsed day in the selected week (today's trade isn't
+  // closed out yet, so for the current week this is literally yesterday) and
+  // how every targeted area did against its target for that one day — null
+  // when the week has no elapsed day yet (e.g. viewing the current week
+  // before its first day has closed out).
+  yesterday: RecoveryYesterday | null;
 }
 
 // Shared by the /recovery page and its Excel export so the two can never
@@ -211,6 +231,22 @@ export async function computeRecoveryReport(
   ].sort((a, b) => a.sortKey - b.sortKey);
   const sections: RecoverySection[] = orderedSections.map((s) => s.section);
 
+  const yesterdayDay = elapsedDays.length > 0 ? elapsedDays[elapsedDays.length - 1] : null;
+  let yesterday: RecoveryYesterday | null = null;
+  if (yesterdayDay) {
+    const yesterdayAreas = [
+      ...standaloneRows.map((r) => r.area),
+      ...groups.filter((g) => targetsByAreaDay.has(g.row.area.id)).map((g) => g.row.area),
+    ].sort((a, b) => a.displayOrder - b.displayOrder);
+
+    const results: YesterdayResult[] = yesterdayAreas.map((area) => {
+      const target = targetFor(area.id, yesterdayDay.dayOfWeek);
+      const { total, hasValue } = actualFor(area.memberLineIds, yesterdayDay.date);
+      return { area, target, actual: hasValue ? total : null, met: hasValue && total >= target };
+    });
+    yesterday = { day: yesterdayDay, results };
+  }
+
   return {
     monday,
     mondayIso,
@@ -220,5 +256,6 @@ export async function computeRecoveryReport(
     sections,
     ungroupedRows,
     remainingDaysCount: remainingDays.length,
+    yesterday,
   };
 }

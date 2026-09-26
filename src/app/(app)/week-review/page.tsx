@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchWeeklyReportData, type HeadlineRow } from "@/lib/revenue/weekly-report";
 import { abbreviateLineLabel, formatArea, formatSigned } from "@/lib/revenue/format";
 import WeekShell from "../week-shell";
-import PrintButton from "./print-button";
+import PrintButton from "../print-button";
 import styles from "./report.module.css";
 
 function TrendLabel({ row }: { row: HeadlineRow }) {

@@ -129,4 +129,29 @@ body {
     padding: 0;
     font-size: 7.5pt;
   }
+
+  /* Same fix, same reason, for the Recovery tab's breakdown table — 8
+     columns at min-width 1000px plus a horizontal scrollbar on screen. */
+  .recovery-table-wrap {
+    overflow: visible;
+  }
+
+  .recovery-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 7.5pt;
+  }
+
+  .recovery-table th,
+  .recovery-table td {
+    position: static;
+    padding: 2px 3px;
+    overflow-wrap: break-word;
+  }
+
+  .recovery-table th:first-child,
+  .recovery-table td:first-child {
+    width: 16%;
+  }
 }

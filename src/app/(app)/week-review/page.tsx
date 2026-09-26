@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchWeeklyReportData, type HeadlineRow } from "@/lib/revenue/weekly-report";
 import { abbreviateLineLabel, formatArea, formatSigned } from "@/lib/revenue/format";
 import WeekShell from "../week-shell";
-import PrintButton from "./print-button";
+import PrintButton from "../print-button";
 import styles from "./report.module.css";
 
 function TrendLabel({ row }: { row: HeadlineRow }) {
@@ -130,7 +130,14 @@ export default async function WeekReviewPage({
                     <td>{d.label}</td>
                     {lines.map((line) => {
                       const value = actuals[`${d.date}|${line.id}`];
-                      return <td key={line.id}>{value !== undefined ? formatArea(value, line.unit, 0) : "—"}</td>;
+                      const target = line.targetByDay?.[d.dayOfWeek];
+                      const met = value !== undefined && target !== undefined && value >= target;
+                      return (
+                        <td key={line.id} className={met ? styles.metCell : undefined}>
+                          {value !== undefined ? formatArea(value, line.unit, 0) : "—"}
+                          {met && " ✓"}
+                        </td>
+                      );
                     })}
                   </tr>
                 ))}

@@ -1,11 +1,12 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { computeRecoveryReport, type RecoveryRow, type RecoveryMemberRow } from "@/lib/revenue/recovery";
+import { computeRecoveryReport, type RecoveryRow, type RecoveryMemberRow, type YesterdayResult } from "@/lib/revenue/recovery";
 import { fetchWeekKpis } from "@/lib/revenue/week-kpis";
 import { formatArea } from "@/lib/revenue/format";
 import WeekShell from "../week-shell";
 import ExportBar from "../export-bar";
+import PrintButton from "../print-button";
 
 function varianceColor(variance: number | null) {
   if (variance === null) return undefined;
@@ -87,6 +88,34 @@ function MemberRow({ m }: { m: RecoveryMemberRow }) {
   );
 }
 
+function YesterdayCard({ r }: { r: YesterdayResult }) {
+  return (
+    <div
+      className="min-w-[168px] flex-1 rounded-lg border p-3"
+      style={{
+        background: r.met ? "var(--qr-green-status-bg)" : "var(--qr-card-bg)",
+        borderColor: "var(--qr-line)",
+        borderLeft: `4px solid ${r.met ? "var(--qr-green-status-fg)" : r.actual !== null ? "var(--qr-red)" : "var(--qr-line)"}`,
+      }}
+    >
+      <div className="text-[0.68rem] font-semibold uppercase tracking-wide" style={{ color: "var(--qr-ink-soft)" }}>
+        {r.area.label}
+      </div>
+      <div
+        className="font-display mt-1 text-xl font-bold"
+        style={{ color: r.met ? "var(--qr-green-status-fg)" : "var(--qr-ink)" }}
+      >
+        {r.actual !== null ? formatArea(r.actual, r.area.unit) : "—"}
+        {r.met && " ✓"}
+      </div>
+      <div className="mt-1 text-xs" style={{ color: "var(--qr-ink-soft)" }}>
+        Target {formatArea(r.target, r.area.unit)}
+        {r.actual === null && " · not entered"}
+      </div>
+    </div>
+  );
+}
+
 export default async function RecoveryPage({
   searchParams,
 }: {
@@ -95,8 +124,10 @@ export default async function RecoveryPage({
   const { week } = await searchParams;
   const supabase = await createClient();
 
-  const [{ mondayIso, days, isCurrentWeek, hasAnyTargets, sections, ungroupedRows, remainingDaysCount }, { headline }] =
-    await Promise.all([computeRecoveryReport(supabase, week), fetchWeekKpis(supabase, week)]);
+  const [
+    { mondayIso, days, isCurrentWeek, hasAnyTargets, sections, ungroupedRows, remainingDaysCount, yesterday },
+    { headline },
+  ] = await Promise.all([computeRecoveryReport(supabase, week), fetchWeekKpis(supabase, week)]);
 
   return (
     <WeekShell
@@ -104,12 +135,30 @@ export default async function RecoveryPage({
       mondayIso={mondayIso}
       isCurrentWeek={isCurrentWeek}
       kpis={headline}
-      actions={<ExportBar excelHref={`/api/export/recovery?week=${mondayIso}`} />}
+      actions={
+        <>
+          <ExportBar excelHref={`/api/export/recovery?week=${mondayIso}`} />
+          <PrintButton />
+        </>
+      }
     >
       <p className="text-sm print:hidden" style={{ color: "var(--qr-ink-soft)" }}>
         As of {isCurrentWeek ? "today" : "week end"} · {remainingDaysCount} day{remainingDaysCount === 1 ? "" : "s"} left in{" "}
         {days[0].label} – {days[6].label}
       </p>
+
+      {yesterday && yesterday.results.length > 0 && (
+        <div>
+          <h2 className="mb-2 text-sm font-bold" style={{ color: "var(--qr-ink)" }}>
+            {isCurrentWeek ? "Yesterday's" : "Last Day's"} Results — {yesterday.day.label}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {yesterday.results.map((r) => (
+              <YesterdayCard key={r.area.id} r={r} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {!hasAnyTargets && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
@@ -121,8 +170,11 @@ export default async function RecoveryPage({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
-        <table className="w-full min-w-[1000px] border-collapse text-sm" style={{ background: "var(--qr-surface)" }}>
+      <div className="recovery-table-wrap overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+        <table
+          className="recovery-table w-full min-w-[1000px] border-collapse text-sm"
+          style={{ background: "var(--qr-surface)" }}
+        >
           <thead>
             <tr>
               <th className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide" style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}>

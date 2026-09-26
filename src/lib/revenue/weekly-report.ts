@@ -17,6 +17,12 @@ export interface WeeklyReportLine {
   unit: "currency" | "percent" | "count";
   isAveraged: boolean;
   weekTotal: number | null;
+  // Only set for the handful of lines that carry their own standing target
+  // (e.g. Gaming Turnover, Accommodation Occupancy) — most lines are group
+  // members (Main Bar Liquor under All Bars, etc.) whose target exists only
+  // as a daily total for the whole group, not per member line, so there is
+  // no correct single-line target to compare a day's actual against.
+  targetByDay?: Record<number, number>;
 }
 
 export interface WeeklyReportData {
@@ -123,7 +129,9 @@ export async function fetchWeeklyReportData(supabase: SupabaseClient, weekParam?
   const lines: WeeklyReportLine[] = lineAreas.map((a) => {
     const { total, daysWithValue } = sumAreaActual(a.memberLineIds, days, actualsByLineDate);
     const weekTotal = daysWithValue === 0 ? null : a.isAveraged ? total / daysWithValue : total;
-    return { id: a.id, label: a.label, unit: a.unit, isAveraged: a.isAveraged, weekTotal };
+    const byDay = targetsByAreaDay.get(a.id);
+    const targetByDay = byDay ? Object.fromEntries(byDay) : undefined;
+    return { id: a.id, label: a.label, unit: a.unit, isAveraged: a.isAveraged, weekTotal, targetByDay };
   });
 
   const actuals: Record<string, number> = {};

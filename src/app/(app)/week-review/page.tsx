@@ -130,7 +130,14 @@ export default async function WeekReviewPage({
                     <td>{d.label}</td>
                     {lines.map((line) => {
                       const value = actuals[`${d.date}|${line.id}`];
-                      return <td key={line.id}>{value !== undefined ? formatArea(value, line.unit, 0) : "—"}</td>;
+                      const target = line.targetByDay?.[d.dayOfWeek];
+                      const met = value !== undefined && target !== undefined && value >= target;
+                      return (
+                        <td key={line.id} className={met ? styles.metCell : undefined}>
+                          {value !== undefined ? formatArea(value, line.unit, 0) : "—"}
+                          {met && " ✓"}
+                        </td>
+                      );
                     })}
                   </tr>
                 ))}

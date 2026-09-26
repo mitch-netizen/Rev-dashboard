@@ -165,6 +165,11 @@
   background: var(--qr-total-row);
   font-weight: 700;
 }
+.metCell {
+  background: var(--qr-green-status-bg);
+  color: var(--qr-green-status-fg);
+  font-weight: 700;
+}
 .page .totalRow td {
   border-top: 2px solid var(--qr-gold);
   border-bottom: none;

@@ -17,7 +17,7 @@ interface DayLike {
   dayOfWeek: number;
 }
 
-function sumAreaActual(memberLineIds: string[], days: DayLike[], actualsByLineDate: Map<string, Map<string, number>>) {
+export function sumAreaActual(memberLineIds: string[], days: DayLike[], actualsByLineDate: Map<string, Map<string, number>>) {
   let total = 0;
   let daysWithValue = 0;
   for (const d of days) {

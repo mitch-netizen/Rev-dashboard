@@ -3,13 +3,14 @@ import { addDays, toIsoDate } from "@/lib/revenue/constants";
 import { formatArea, formatSigned } from "@/lib/revenue/format";
 import type { HeadlineRow } from "@/lib/revenue/week-kpis";
 
-export type WeekTab = "entry" | "review" | "recovery" | "targets";
+export type WeekTab = "entry" | "review" | "recovery" | "targets" | "weekly-report";
 
 const TABS: { key: WeekTab; label: string; href: string; hint: string }[] = [
   { key: "entry", label: "Entry", href: "/", hint: "Enter daily actuals" },
   { key: "review", label: "Review", href: "/week-review", hint: "Headline KPIs & trends" },
   { key: "recovery", label: "Recovery", href: "/recovery", hint: "Pacing vs target" },
   { key: "targets", label: "Targets", href: "/targets", hint: "Edit this week's targets" },
+  { key: "weekly-report", label: "Weekly Report", href: "/weekly-report", hint: "Notes for the management meeting" },
 ];
 
 function weekHref(basePath: string, weekIso: string, isCurrentWeek: boolean): string {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { saveWeeklyReportField } from "./actions";
 import { WEEKLY_REPORT_SECTIONS } from "@/lib/revenue/weekly-report-fields";
 import { formatArea, formatSigned } from "@/lib/revenue/format";
@@ -56,6 +56,12 @@ function KpiRefCard({ row }: { row: WeeklyReportKpiRow }) {
   );
 }
 
+// Saves ~1s after you stop typing, not just on blur — onBlur alone means a
+// field you never click away from (close the tab, switch apps, click a nav
+// link) never reaches the server at all. onBlur still flushes immediately
+// as a fast path and to cancel any pending debounce.
+const SAVE_DEBOUNCE_MS = 1000;
+
 function FieldInput({
   id,
   type,
@@ -68,16 +74,31 @@ function FieldInput({
   onCommit: (value: string) => void;
 }) {
   const [local, setLocal] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shared = "w-full rounded-md border px-3 py-2 text-sm focus:outline-none";
   const style = { background: "var(--qr-card-bg)", borderColor: "var(--qr-line)", color: "var(--qr-ink)" };
+
+  function handleChange(next: string) {
+    setLocal(next);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onCommit(next), SAVE_DEBOUNCE_MS);
+  }
+
+  function handleBlur(next: string) {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    onCommit(next);
+  }
 
   if (type === "textarea") {
     return (
       <textarea
         id={id}
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={(e) => onCommit(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={(e) => handleBlur(e.target.value)}
         rows={3}
         className={`${shared} resize-y`}
         style={style}
@@ -89,8 +110,8 @@ function FieldInput({
       id={id}
       type={type}
       value={local}
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={(e) => onCommit(e.target.value)}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={(e) => handleBlur(e.target.value)}
       className={shared}
       style={style}
     />
@@ -114,11 +135,17 @@ export default function WeeklyReportNotesForm({
     ...initialAnswers,
   }));
   const [isPending, startTransition] = useTransition();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function commit(field: string, value: string) {
     setAnswers((prev) => ({ ...prev, [field]: value }));
-    startTransition(() => {
-      saveWeeklyReportField(weekId, field, value);
+    startTransition(async () => {
+      try {
+        await saveWeeklyReportField(weekId, field, value);
+        setSaveError(null);
+      } catch {
+        setSaveError(`Couldn't save "${field}" — try editing it again, or check your connection.`);
+      }
     });
   }
 
@@ -202,8 +229,12 @@ export default function WeeklyReportNotesForm({
         </div>
       ))}
 
-      <p className="text-xs" style={{ color: "var(--qr-ink-faint)" }}>
-        {isPending ? "Saving…" : "Saved — every field autosaves when you click away from it."}
+      <p className="text-xs" style={{ color: saveError ? "var(--qr-red-status-fg)" : "var(--qr-ink-faint)" }}>
+        {saveError
+          ? saveError
+          : isPending
+            ? "Saving…"
+            : "Saved — every field autosaves about a second after you stop typing, or as soon as you click away."}
       </p>
     </div>
   );

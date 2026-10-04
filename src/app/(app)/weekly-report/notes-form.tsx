@@ -135,19 +135,56 @@ export default function WeeklyReportNotesForm({
     ...initialAnswers,
   }));
   const [isPending, startTransition] = useTransition();
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Latest value asked to be saved per field, and whether a save for that
+  // field is currently in flight — lets overlapping saves of the *same*
+  // field (debounce fires, then a blur fires before it resolves) serialize
+  // instead of racing: a save loop for a field keeps re-sending until the
+  // value it just sent is still the latest one wanted, so an in-flight
+  // request for a stale value can never clobber a newer one that landed
+  // first, and a failure on one field never clears another field's error.
+  const pendingRef = useRef<Record<string, string>>({});
+  const savingRef = useRef<Record<string, boolean>>({});
+
+  function runSaveLoop(field: string) {
+    savingRef.current[field] = true;
+    (async () => {
+      for (;;) {
+        const valueToSave = pendingRef.current[field];
+        try {
+          await saveWeeklyReportField(weekId, field, valueToSave);
+          setFieldErrors((prev) => {
+            if (!(field in prev)) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+          });
+        } catch {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [field]: `Couldn't save "${field}" — try editing it again, or check your connection.`,
+          }));
+        }
+        if (pendingRef.current[field] === valueToSave) {
+          savingRef.current[field] = false;
+          return;
+        }
+        // A newer value arrived while this save was in flight — send it too.
+      }
+    })();
+  }
 
   function commit(field: string, value: string) {
     setAnswers((prev) => ({ ...prev, [field]: value }));
-    startTransition(async () => {
-      try {
-        await saveWeeklyReportField(weekId, field, value);
-        setSaveError(null);
-      } catch {
-        setSaveError(`Couldn't save "${field}" — try editing it again, or check your connection.`);
-      }
-    });
+    pendingRef.current[field] = value;
+    if (!savingRef.current[field]) {
+      startTransition(() => {
+        runSaveLoop(field);
+      });
+    }
   }
+
+  const errorFields = Object.keys(fieldErrors);
 
   return (
     <div className="space-y-5">
@@ -229,9 +266,9 @@ export default function WeeklyReportNotesForm({
         </div>
       ))}
 
-      <p className="text-xs" style={{ color: saveError ? "var(--qr-red-status-fg)" : "var(--qr-ink-faint)" }}>
-        {saveError
-          ? saveError
+      <p className="text-xs" style={{ color: errorFields.length > 0 ? "var(--qr-red-status-fg)" : "var(--qr-ink-faint)" }}>
+        {errorFields.length > 0
+          ? `Couldn't save: ${errorFields.join(", ")} — try editing again, or check your connection.`
           : isPending
             ? "Saving…"
             : "Saved — every field autosaves about a second after you stop typing, or as soon as you click away."}

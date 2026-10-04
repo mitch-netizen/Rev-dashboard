@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { saveWeeklyReportField } from "./actions";
 import { WEEKLY_REPORT_SECTIONS } from "@/lib/revenue/weekly-report-fields";
 import { formatArea, formatSigned } from "@/lib/revenue/format";
@@ -56,6 +56,12 @@ function KpiRefCard({ row }: { row: WeeklyReportKpiRow }) {
   );
 }
 
+// Saves ~1s after you stop typing, not just on blur — onBlur alone means a
+// field you never click away from (close the tab, switch apps, click a nav
+// link) never reaches the server at all. onBlur still flushes immediately
+// as a fast path and to cancel any pending debounce.
+const SAVE_DEBOUNCE_MS = 1000;
+
 function FieldInput({
   id,
   type,
@@ -68,16 +74,31 @@ function FieldInput({
   onCommit: (value: string) => void;
 }) {
   const [local, setLocal] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shared = "w-full rounded-md border px-3 py-2 text-sm focus:outline-none";
   const style = { background: "var(--qr-card-bg)", borderColor: "var(--qr-line)", color: "var(--qr-ink)" };
+
+  function handleChange(next: string) {
+    setLocal(next);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onCommit(next), SAVE_DEBOUNCE_MS);
+  }
+
+  function handleBlur(next: string) {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    onCommit(next);
+  }
 
   if (type === "textarea") {
     return (
       <textarea
         id={id}
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={(e) => onCommit(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={(e) => handleBlur(e.target.value)}
         rows={3}
         className={`${shared} resize-y`}
         style={style}
@@ -89,8 +110,8 @@ function FieldInput({
       id={id}
       type={type}
       value={local}
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={(e) => onCommit(e.target.value)}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={(e) => handleBlur(e.target.value)}
       className={shared}
       style={style}
     />
@@ -114,13 +135,56 @@ export default function WeeklyReportNotesForm({
     ...initialAnswers,
   }));
   const [isPending, startTransition] = useTransition();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Latest value asked to be saved per field, and whether a save for that
+  // field is currently in flight — lets overlapping saves of the *same*
+  // field (debounce fires, then a blur fires before it resolves) serialize
+  // instead of racing: a save loop for a field keeps re-sending until the
+  // value it just sent is still the latest one wanted, so an in-flight
+  // request for a stale value can never clobber a newer one that landed
+  // first, and a failure on one field never clears another field's error.
+  const pendingRef = useRef<Record<string, string>>({});
+  const savingRef = useRef<Record<string, boolean>>({});
+
+  function runSaveLoop(field: string) {
+    savingRef.current[field] = true;
+    (async () => {
+      for (;;) {
+        const valueToSave = pendingRef.current[field];
+        try {
+          await saveWeeklyReportField(weekId, field, valueToSave);
+          setFieldErrors((prev) => {
+            if (!(field in prev)) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+          });
+        } catch {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [field]: `Couldn't save "${field}" — try editing it again, or check your connection.`,
+          }));
+        }
+        if (pendingRef.current[field] === valueToSave) {
+          savingRef.current[field] = false;
+          return;
+        }
+        // A newer value arrived while this save was in flight — send it too.
+      }
+    })();
+  }
 
   function commit(field: string, value: string) {
     setAnswers((prev) => ({ ...prev, [field]: value }));
-    startTransition(() => {
-      saveWeeklyReportField(weekId, field, value);
-    });
+    pendingRef.current[field] = value;
+    if (!savingRef.current[field]) {
+      startTransition(() => {
+        runSaveLoop(field);
+      });
+    }
   }
+
+  const errorFields = Object.keys(fieldErrors);
 
   return (
     <div className="space-y-5">
@@ -202,8 +266,12 @@ export default function WeeklyReportNotesForm({
         </div>
       ))}
 
-      <p className="text-xs" style={{ color: "var(--qr-ink-faint)" }}>
-        {isPending ? "Saving…" : "Saved — every field autosaves when you click away from it."}
+      <p className="text-xs" style={{ color: errorFields.length > 0 ? "var(--qr-red-status-fg)" : "var(--qr-ink-faint)" }}>
+        {errorFields.length > 0
+          ? `Couldn't save: ${errorFields.join(", ")} — try editing again, or check your connection.`
+          : isPending
+            ? "Saving…"
+            : "Saved — every field autosaves about a second after you stop typing, or as soon as you click away."}
       </p>
     </div>
   );

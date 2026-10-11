@@ -139,14 +139,14 @@ export default function ReviewTable({
           <button
             onClick={handleCommit}
             disabled={isPending}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+            className="rounded-none bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
           >
             Confirm and save
           </button>
           <button
             onClick={handleDiscard}
             disabled={isPending}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-50 dark:border-neutral-700"
+            className="rounded-none border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-50 dark:border-neutral-700"
           >
             Discard
           </button>

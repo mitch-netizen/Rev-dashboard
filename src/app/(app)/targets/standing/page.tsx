@@ -23,7 +23,7 @@ export default async function StandingTargetsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-lg border p-4 sm:p-5" style={{ background: "var(--qr-header-bg)", borderColor: "var(--qr-line)" }}>
+      <div className="rounded-none border p-4 sm:p-5" style={{ background: "var(--qr-header-bg)", borderColor: "var(--qr-line)" }}>
         <Link
           href="/targets"
           className="text-xs hover:opacity-80"

@@ -65,7 +65,7 @@ export default function WeekGrid({
   );
 
   return (
-    <div className="week-grid-wrap overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+    <div className="week-grid-wrap overflow-x-auto rounded-none border" style={{ borderColor: "var(--qr-line)" }}>
       <table
         className="week-grid-table w-full min-w-[980px] border-collapse text-sm"
         style={{ background: "var(--qr-surface)" }}
@@ -74,7 +74,7 @@ export default function WeekGrid({
           <tr>
             <th
               className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide"
-              style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}
+              style={{ background: "var(--qr-green-table)", color: "var(--qr-text-inverse)" }}
             >
               Revenue line
             </th>
@@ -84,7 +84,7 @@ export default function WeekGrid({
                 className="p-2.5 text-right text-[0.72rem] font-semibold uppercase tracking-wide"
                 style={{
                   background: "var(--qr-green-table)",
-                  color: d.date === todayIso ? "var(--qr-gold-soft)" : "#f5f0e6",
+                  color: d.date === todayIso ? "var(--qr-gold-soft)" : "var(--qr-text-inverse)",
                 }}
               >
                 {d.label}

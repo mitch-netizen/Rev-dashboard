@@ -3,9 +3,10 @@ import { addDays, toIsoDate } from "@/lib/revenue/constants";
 import { formatArea, formatSigned } from "@/lib/revenue/format";
 import type { HeadlineRow } from "@/lib/revenue/week-kpis";
 
-export type WeekTab = "entry" | "review" | "recovery" | "targets" | "weekly-report";
+export type WeekTab = "dashboard" | "entry" | "review" | "recovery" | "targets" | "weekly-report";
 
 const TABS: { key: WeekTab; label: string; href: string; hint: string }[] = [
+  { key: "dashboard", label: "Dashboard", href: "/dashboard", hint: "This week at a glance" },
   { key: "entry", label: "Entry", href: "/", hint: "Enter daily actuals" },
   { key: "review", label: "Review", href: "/week-review", hint: "Headline KPIs & trends" },
   { key: "recovery", label: "Recovery", href: "/recovery", hint: "Pacing vs target" },
@@ -27,7 +28,7 @@ function KpiCard({ row }: { row: HeadlineRow }) {
 
   return (
     <div
-      className="min-w-[168px] flex-1 rounded-lg border p-3"
+      className="min-w-[168px] flex-1 rounded-none border p-3"
       style={{
         background: "var(--qr-card-bg)",
         borderColor: "var(--qr-line)",
@@ -99,7 +100,7 @@ export default function WeekShell({
   return (
     <div className="space-y-5">
       <div
-        className="rounded-lg border p-4 print:hidden sm:p-5"
+        className="rounded-none border p-4 print:hidden sm:p-5"
         style={{ background: "var(--qr-header-bg)", borderColor: "var(--qr-line)" }}
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -114,7 +115,7 @@ export default function WeekShell({
           <div className="flex items-center gap-2 text-sm">
             <Link
               href={weekHref(activeTab.href, prevWeekIso, false)}
-              className="rounded-md border px-3 py-1.5 hover:opacity-80"
+              className="rounded-none border px-3 py-1.5 hover:opacity-80"
               style={{ borderColor: "var(--qr-ink-faint)", color: "var(--qr-header-fg)" }}
             >
               ← Prev
@@ -122,7 +123,7 @@ export default function WeekShell({
             {!isCurrentWeek && (
               <Link
                 href={activeTab.href}
-                className="rounded-md border px-3 py-1.5 hover:opacity-80"
+                className="rounded-none border px-3 py-1.5 hover:opacity-80"
                 style={{ borderColor: "var(--qr-gold)", color: "var(--qr-gold)" }}
               >
                 This week
@@ -130,7 +131,7 @@ export default function WeekShell({
             )}
             <Link
               href={weekHref(activeTab.href, nextWeekIso, false)}
-              className="rounded-md border px-3 py-1.5 hover:opacity-80"
+              className="rounded-none border px-3 py-1.5 hover:opacity-80"
               style={{ borderColor: "var(--qr-ink-faint)", color: "var(--qr-header-fg)" }}
             >
               Next →

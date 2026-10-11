@@ -58,7 +58,7 @@ export default async function WeekReviewPage({
   return (
     <WeekShell active="review" mondayIso={mondayIso} isCurrentWeek={isCurrentWeek} kpis={headline} actions={<PrintButton />}>
       {!hasAnyTargets && (
-        <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
+        <div className="mb-4 rounded-none border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
           No targets are set up yet, so this report has nothing to compare against.{" "}
           <Link href="/targets" className="underline">
             Set up targets

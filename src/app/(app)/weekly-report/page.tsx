@@ -40,7 +40,7 @@ export default async function WeeklyReportPage({
           weekEndingDefault={weekEndingDefault}
         />
       ) : (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <div className="rounded-none border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
           This week hasn&apos;t been opened yet and you don&apos;t have permission to seed it — ask an admin or
           manager to open it first.
         </div>

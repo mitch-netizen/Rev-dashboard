@@ -34,7 +34,7 @@ export default async function ReviewQueuePage() {
       </div>
 
       {docs && docs.length > 0 ? (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 dark:divide-neutral-900 dark:border-neutral-800">
+        <ul className="divide-y divide-neutral-100 rounded-none border border-neutral-200 dark:divide-neutral-900 dark:border-neutral-800">
           {docs.map((doc) => (
             <li key={doc.id} className="flex items-center justify-between px-4 py-3 text-sm">
               <div>

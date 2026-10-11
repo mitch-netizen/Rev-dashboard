@@ -91,7 +91,7 @@ function MemberRow({ m }: { m: RecoveryMemberRow }) {
 function YesterdayCard({ r }: { r: YesterdayResult }) {
   return (
     <div
-      className="min-w-[168px] flex-1 rounded-lg border p-3"
+      className="min-w-[168px] flex-1 rounded-none border p-3"
       style={{
         background: r.met ? "var(--qr-green-status-bg)" : "var(--qr-card-bg)",
         borderColor: "var(--qr-line)",
@@ -161,7 +161,7 @@ export default async function RecoveryPage({
       )}
 
       {!hasAnyTargets && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
+        <div className="rounded-none border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 print:hidden">
           No targets are set up yet, so this report has nothing to compare against.{" "}
           <Link href="/targets" className="underline">
             Set up targets
@@ -170,19 +170,19 @@ export default async function RecoveryPage({
         </div>
       )}
 
-      <div className="recovery-table-wrap overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+      <div className="recovery-table-wrap overflow-x-auto rounded-none border" style={{ borderColor: "var(--qr-line)" }}>
         <table
           className="recovery-table w-full min-w-[1000px] border-collapse text-sm"
           style={{ background: "var(--qr-surface)" }}
         >
           <thead>
             <tr>
-              <th className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide" style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}>
+              <th className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide" style={{ background: "var(--qr-green-table)", color: "var(--qr-text-inverse)" }}>
                 Area
               </th>
               {["Weekly target", "Target to date", "Actual to date", "Variance", "Normal daily target (rest of week)", "Extra needed per day", "New required daily target"].map(
                 (label) => (
-                  <th key={label} className={th} style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}>
+                  <th key={label} className={th} style={{ background: "var(--qr-green-table)", color: "var(--qr-text-inverse)" }}>
                     {label}
                   </th>
                 )
@@ -207,7 +207,7 @@ export default async function RecoveryPage({
       </div>
 
       {ungroupedRows.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+        <div className="overflow-x-auto rounded-none border" style={{ borderColor: "var(--qr-line)" }}>
           <p className="p-2 text-xs font-medium uppercase tracking-wide" style={{ color: "var(--qr-ink-faint)" }}>
             No target set
           </p>

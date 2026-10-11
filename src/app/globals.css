@@ -4,27 +4,33 @@
   --background: var(--qr-bg);
   --foreground: var(--qr-ink);
 
-  /* The Queens brand palette — gold/cream/dark-green, shared across every
-     page (not just the printable report) so the app reads as one system. */
-  --qr-bg: #f5f0e6;
+  /* The Queens Hotel Gladstone's real brand tokens (from the venue's design
+     system — gold #a89436 + emerald #0b7a57 on charcoal/off-white, Big
+     Shoulders Display + Work Sans, sharp corners). The design system ships
+     one theme only (the website treats "dark" as charcoal-coloured sections
+     within that one palette, not an OS dark-mode toggle) — the dark values
+     below reuse the brand's own charcoal-section colours rather than
+     inventing a second palette, so this app's dark mode stays on-brand. */
+  --qr-bg: #faf8f3;
   --qr-surface: #ffffff;
-  --qr-card-bg: #fbf7ef;
-  --qr-ink: #1c1a16;
-  --qr-ink-soft: #5b5648;
-  --qr-ink-faint: #948d78;
-  --qr-header-bg: #17140f;
-  --qr-header-fg: #f5f0e6;
-  --qr-gold: #b8902e;
-  --qr-gold-soft: #e8d9b5;
-  --qr-green-table: #1f4a3d;
-  --qr-green-status-bg: #e4eee7;
-  --qr-green-status-fg: #1f4a3d;
-  --qr-red: #a23b2e;
-  --qr-red-status-bg: #f5e4e1;
-  --qr-red-status-fg: #a23b2e;
-  --qr-line: #e3dbc9;
-  --qr-row-alt: #faf6ec;
-  --qr-total-row: #f0e5cb;
+  --qr-card-bg: #f4f1eb;
+  --qr-ink: #0d0d0d;
+  --qr-ink-soft: #585450;
+  --qr-ink-faint: #9a9690;
+  --qr-header-bg: #1c1c1c;
+  --qr-header-fg: #ffffff;
+  --qr-text-inverse: #ffffff;
+  --qr-gold: #a89436;
+  --qr-gold-soft: #f4eecc;
+  --qr-green-table: #0b7a57;
+  --qr-green-status-bg: #dcf0e6;
+  --qr-green-status-fg: #075c41;
+  --qr-red: #b5502f;
+  --qr-red-status-bg: rgba(181, 80, 47, 0.14);
+  --qr-red-status-fg: #b5502f;
+  --qr-line: #e4e0d8;
+  --qr-row-alt: #f4f1eb;
+  --qr-total-row: #f4eecc;
 }
 
 @theme inline {
@@ -37,25 +43,26 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --qr-bg: #17140f;
-    --qr-surface: #201c15;
-    --qr-card-bg: #24201a;
-    --qr-ink: #f0ead9;
-    --qr-ink-soft: #b8af98;
-    --qr-ink-faint: #7e7862;
-    --qr-header-bg: #0c0a07;
-    --qr-header-fg: #f0ead9;
-    --qr-gold: #d8b45c;
-    --qr-gold-soft: #4a3d20;
-    --qr-green-table: #24463b;
-    --qr-green-status-bg: #1d3128;
-    --qr-green-status-fg: #8fcbae;
-    --qr-red: #c4695a;
-    --qr-red-status-bg: #3a211c;
-    --qr-red-status-fg: #e0998a;
-    --qr-line: #38321f;
-    --qr-row-alt: #1c1811;
-    --qr-total-row: #332a17;
+    --qr-bg: #1c1c1c;
+    --qr-surface: #2a2826;
+    --qr-card-bg: #2a2826;
+    --qr-ink: #ffffff;
+    --qr-ink-soft: #9a9690;
+    --qr-ink-faint: #9a9690;
+    --qr-header-bg: #0d0d0d;
+    --qr-header-fg: #ffffff;
+    --qr-text-inverse: #ffffff;
+    --qr-gold: #c4ae52;
+    --qr-gold-soft: #4a4116;
+    --qr-green-table: #2fa37c;
+    --qr-green-status-bg: #04382a;
+    --qr-green-status-fg: #2fa37c;
+    --qr-red: #b5502f;
+    --qr-red-status-bg: rgba(181, 80, 47, 0.22);
+    --qr-red-status-fg: #b5502f;
+    --qr-line: rgba(255, 255, 255, 0.14);
+    --qr-row-alt: rgba(255, 255, 255, 0.04);
+    --qr-total-row: #4a4116;
   }
 }
 
@@ -66,7 +73,9 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-playfair), "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 @media print {

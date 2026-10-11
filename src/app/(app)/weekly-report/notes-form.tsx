@@ -31,7 +31,7 @@ function KpiRefCard({ row }: { row: WeeklyReportKpiRow }) {
     row.met === true ? "var(--qr-green-status-fg)" : row.met === false ? "var(--qr-red)" : "var(--qr-line)";
   return (
     <div
-      className="min-w-[170px] flex-1 rounded-lg border p-3"
+      className="min-w-[170px] flex-1 rounded-none border p-3"
       style={{ background: "var(--qr-card-bg)", borderColor: "var(--qr-line)", borderLeft: `4px solid ${borderColor}` }}
     >
       <div className="text-[0.66rem] font-semibold uppercase tracking-wide" style={{ color: "var(--qr-ink-soft)" }}>
@@ -75,7 +75,7 @@ function FieldInput({
 }) {
   const [local, setLocal] = useState(value);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shared = "w-full rounded-md border px-3 py-2 text-sm focus:outline-none";
+  const shared = "w-full rounded-none border px-3 py-2 text-sm focus:outline-none";
   const style = { background: "var(--qr-card-bg)", borderColor: "var(--qr-line)", color: "var(--qr-ink)" };
 
   function handleChange(next: string) {
@@ -198,7 +198,7 @@ export default function WeeklyReportNotesForm({
           <a
             key={s.id}
             href={`#wr-${s.id}`}
-            className="rounded-md px-2.5 py-1 hover:opacity-80"
+            className="rounded-none px-2.5 py-1 hover:opacity-80"
             style={{ color: "var(--qr-ink-soft)" }}
           >
             {s.label}
@@ -210,7 +210,7 @@ export default function WeeklyReportNotesForm({
         <div
           key={section.id}
           id={`wr-${section.id}`}
-          className="scroll-mt-4 rounded-lg border p-4 sm:p-5"
+          className="scroll-mt-4 rounded-none border p-4 sm:p-5"
           style={{ background: "var(--qr-surface)", borderColor: "var(--qr-line)" }}
         >
           <h2 className="font-display text-base font-bold" style={{ color: "var(--qr-ink)" }}>

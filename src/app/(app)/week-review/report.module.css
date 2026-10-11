@@ -14,7 +14,7 @@
 .reportHeader {
   background: var(--qr-header-bg);
   color: var(--qr-header-fg);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 26px 32px;
   display: flex;
   align-items: flex-start;
@@ -23,11 +23,12 @@
   flex-wrap: wrap;
 }
 .reportHeader h1 {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-weight: 700;
+  font-family: var(--font-playfair), "Arial Narrow", sans-serif;
+  font-weight: 800;
   font-size: 2.05rem;
   margin: 0 0 4px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 .subtitle {
   color: var(--qr-gold);
@@ -57,7 +58,7 @@
   background: var(--qr-card-bg);
   border: 1px solid var(--qr-line);
   border-left: 5px solid var(--qr-gold);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 16px 16px 14px;
 }
 .statCard.short {
@@ -72,8 +73,8 @@
   margin-bottom: 6px;
 }
 .statCard .value {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-weight: 700;
+  font-family: var(--font-playfair), "Arial Narrow", sans-serif;
+  font-weight: 800;
   font-size: 1.7rem;
   line-height: 1.1;
   margin-bottom: 6px;
@@ -115,7 +116,7 @@
 .trendCard {
   background: var(--qr-card-bg);
   border: 1px solid var(--qr-line);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 10px 14px;
 }
 .trendCard .label {
@@ -129,7 +130,7 @@
 
 .tableScroll {
   overflow-x: auto;
-  border-radius: 8px;
+  border-radius: 0;
 }
 .page table {
   width: 100%;
@@ -139,7 +140,7 @@
 }
 .page thead th {
   background: var(--qr-green-table);
-  color: #f5f0e6;
+  color: var(--qr-text-inverse);
   text-align: right;
   font-weight: 600;
   font-size: 0.72rem;
@@ -254,7 +255,7 @@
   }
   .statCard {
     padding: 6px 10px 5px;
-    border-radius: 5px;
+    border-radius: 0;
   }
   .statCard .label {
     font-size: 0.58rem;
@@ -278,7 +279,7 @@
   }
   .trendCard {
     padding: 4px 8px;
-    border-radius: 5px;
+    border-radius: 0;
   }
   .trendCard .label {
     font-size: 0.58rem;
@@ -349,7 +350,7 @@
     padding: 1px 2px;
     font-size: 0.44rem;
     white-space: normal;
-    border-left: 1px solid rgba(245, 240, 230, 0.45);
+    border-left: 1px solid rgba(255, 255, 255, 0.35);
   }
   .dailyActualsTable tbody td {
     padding: 1px 2px;

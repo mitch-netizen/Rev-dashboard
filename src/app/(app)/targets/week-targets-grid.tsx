@@ -144,13 +144,13 @@ export default function WeekTargetsGrid({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--qr-line)" }}>
+    <div className="overflow-x-auto rounded-none border" style={{ borderColor: "var(--qr-line)" }}>
       <table className="w-full min-w-[1120px] border-collapse text-sm" style={{ background: "var(--qr-surface)" }}>
         <thead>
           <tr>
             <th
               className="sticky left-0 p-2.5 text-left text-[0.72rem] font-semibold uppercase tracking-wide"
-              style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}
+              style={{ background: "var(--qr-green-table)", color: "var(--qr-text-inverse)" }}
             >
               Area
             </th>
@@ -158,7 +158,7 @@ export default function WeekTargetsGrid({
               <th
                 key={label}
                 className="p-2.5 text-right text-[0.72rem] font-semibold uppercase tracking-wide"
-                style={{ background: "var(--qr-green-table)", color: "#f5f0e6" }}
+                style={{ background: "var(--qr-green-table)", color: "var(--qr-text-inverse)" }}
               >
                 {label.slice(0, 3)}
               </th>

@@ -80,7 +80,7 @@ export default function UploadPage() {
           if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`flex h-48 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-sm transition-colors ${
+        className={`flex h-48 cursor-pointer flex-col items-center justify-center rounded-none border-2 border-dashed text-sm transition-colors ${
           dragOver
             ? "border-neutral-500 bg-neutral-50 dark:bg-neutral-900"
             : "border-neutral-300 dark:border-neutral-700"
@@ -102,7 +102,7 @@ export default function UploadPage() {
       </div>
 
       {results.length > 0 && (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 dark:divide-neutral-900 dark:border-neutral-800">
+        <ul className="divide-y divide-neutral-100 rounded-none border border-neutral-200 dark:divide-neutral-900 dark:border-neutral-800">
           {results.map((r, i) => (
             <li key={i} className="flex items-center justify-between px-4 py-3 text-sm">
               <span className="truncate">{r.filename}</span>

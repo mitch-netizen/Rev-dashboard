@@ -160,6 +160,85 @@ function cellToText(value: unknown): string {
 // header doesn't look like this ledger at all, so detectAndParse can report
 // an unrecognised-report error instead of a raw parse failure.
 export async function tryParseGolfXlsx(buffer: Buffer): Promise<GolfDayResult[] | null> {
+  const rows = await xlsxToRows(buffer);
+  if (!rows) return null;
+
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  if (!findRequiredColumns(header)) return null;
+
+  return parseGolfRows(rows);
+}
+
+// The same booking platform ("YGB") also offers a "purchase report" export —
+// one row per purchase line item, not a double-entry ledger. Venue revenue
+// is the same two line types the ledger parser counts (bay bookings and
+// rental-club products), summed from totalPrice, which already carries the
+// sign for a voided/refunded line (status "voided") so it nets against its
+// original "confirmed" line automatically — same no-special-casing-needed
+// behaviour as the ledger's credit/debit columns. The "fee" lineType
+// (category "reservation", e.g. "YGB reservation fees") is YGB's own
+// reservation-fee liability, not venue revenue, and is excluded — the same
+// exclusion the ledger parser applies to everything outside account 4000.
+const PURCHASE_REPORT_COLUMNS = ["confirmedat", "totalprice", "linetype", "status"] as const;
+const PURCHASE_REPORT_REVENUE_LINE_TYPES = new Set(["booking", "product"]);
+const PURCHASE_REPORT_VALID_STATUSES = new Set(["confirmed", "voided"]);
+
+function findPurchaseReportColumns(
+  header: string[]
+): Record<(typeof PURCHASE_REPORT_COLUMNS)[number], number> | null {
+  const cols = {} as Record<(typeof PURCHASE_REPORT_COLUMNS)[number], number>;
+  for (const name of PURCHASE_REPORT_COLUMNS) {
+    const idx = header.indexOf(name);
+    if (idx === -1) return null;
+    cols[name] = idx;
+  }
+  return cols;
+}
+
+function parsePurchaseReportRows(rows: string[][]): GolfDayResult[] | null {
+  if (rows.length === 0) return null;
+
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const cols = findPurchaseReportColumns(header);
+  if (!cols) return null;
+  const { confirmedat: dateCol, totalprice: priceCol, linetype: typeCol, status: statusCol } = cols;
+
+  const totalsByDate = new Map<string, number>();
+
+  for (const row of rows.slice(1)) {
+    const lineType = row[typeCol]?.trim().toLowerCase();
+    if (!lineType || !PURCHASE_REPORT_REVENUE_LINE_TYPES.has(lineType)) continue;
+
+    const status = row[statusCol]?.trim().toLowerCase();
+    if (!status || !PURCHASE_REPORT_VALID_STATUSES.has(status)) continue;
+
+    const dateMatch = row[dateCol]?.trim().match(/^(\d{4}-\d{2}-\d{2})/);
+    if (!dateMatch) continue;
+    const iso = dateMatch[1];
+
+    const totalPrice = Number(row[priceCol]?.trim() || "0");
+    if (Number.isNaN(totalPrice)) continue;
+
+    totalsByDate.set(iso, (totalsByDate.get(iso) ?? 0) + totalPrice);
+  }
+
+  if (totalsByDate.size === 0) return null;
+
+  return [...totalsByDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, revenue]) => ({ date, revenue: Math.round(revenue * 100) / 100 }));
+}
+
+export async function tryParseGolfPurchaseReportXlsx(buffer: Buffer): Promise<GolfDayResult[] | null> {
+  const rows = await xlsxToRows(buffer);
+  if (!rows) return null;
+  return parsePurchaseReportRows(rows);
+}
+
+// Shared by both xlsx try-parsers: loads the first worksheet and returns it
+// as the same 2D text-cell array parseGolfRows/parsePurchaseReportRows
+// expect, or null if the file has no readable worksheet at all.
+async function xlsxToRows(buffer: Buffer): Promise<string[][] | null> {
   const ExcelJS = (await import("exceljs")).default;
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
@@ -171,10 +250,5 @@ export async function tryParseGolfXlsx(buffer: Buffer): Promise<GolfDayResult[] 
     const cells = (row.values as unknown[]).slice(1);
     rows.push(cells.map(cellToText));
   });
-  if (rows.length === 0) return null;
-
-  const header = rows[0].map((h) => h.trim().toLowerCase());
-  if (!findRequiredColumns(header)) return null;
-
-  return parseGolfRows(rows);
+  return rows.length === 0 ? null : rows;
 }

@@ -2,7 +2,7 @@ import { sniffFileType } from "./sniff";
 import { extractPdfText } from "./pdf-text";
 import { parseSwiftpos, type SwiftposParseResult } from "./swiftpos";
 import { parseRms, type RmsDayResult } from "./rms";
-import { parseGolfLedger, tryParseGolfXlsx, type GolfDayResult } from "./golf";
+import { parseGolfLedger, tryParseGolfXlsx, tryParseGolfPurchaseReportXlsx, type GolfDayResult } from "./golf";
 import { parseMaxgamingDaily, type MaxgamingDailyResult } from "./maxgaming-daily";
 
 export type DetectedReport =
@@ -21,9 +21,11 @@ export async function detectAndParse(buffer: Buffer): Promise<DetectedReport> {
   const fileType = sniffFileType(buffer);
 
   if (fileType === "xlsx") {
-    const golfResult = await tryParseGolfXlsx(buffer);
-    if (golfResult) return { type: "golf", result: golfResult };
-    throw new Error("Unrecognised .xlsx report — expected a Golf booking ledger export");
+    const ledgerResult = await tryParseGolfXlsx(buffer);
+    if (ledgerResult) return { type: "golf", result: ledgerResult };
+    const purchaseReportResult = await tryParseGolfPurchaseReportXlsx(buffer);
+    if (purchaseReportResult) return { type: "golf", result: purchaseReportResult };
+    throw new Error("Unrecognised .xlsx report — expected a Golf booking ledger or purchase report export");
   }
 
   if (fileType === "text") {

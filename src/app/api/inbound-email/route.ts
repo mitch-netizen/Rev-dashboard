@@ -57,6 +57,25 @@ function sameSecret(given: string, expected: string): boolean {
 const MAX_BODY_BYTES = 35 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 
+/** Reads the body as UTF-8, giving up (null) as soon as it passes `limit` bytes, with or without a Content-Length. */
+async function readCapped(request: Request, limit: number): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf-8");
+}
+
 // Optional comma-separated list of sender addresses or @domains that may
 // email reports in (e.g. "reports@swiftpos.com.au,@rmscloud.com"). Unset
 // means any sender that knows the webhook credentials.
@@ -87,8 +106,8 @@ export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
   }
-  const raw = await request.text();
-  if (raw.length > MAX_BODY_BYTES) {
+  const raw = await readCapped(request, MAX_BODY_BYTES);
+  if (raw === null) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
   }
 

@@ -37,7 +37,10 @@ export async function ingestReportFile(
     throw new Error("Parsed the file but found no revenue lines to import — check the report content");
   }
 
-  const storagePath = `${VENUE_ID}/${report.type}/${Date.now()}-${filename}`;
+  // The filename comes from an upload or an email attachment, so it's reduced
+  // to safe characters before it becomes part of the storage path.
+  const safeName = filename.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^\.+/, "").slice(-120) || "report";
+  const storagePath = `${VENUE_ID}/${report.type}/${Date.now()}-${safeName}`;
   const { error: storageError } = await supabase.storage
     .from("revenue-source-documents")
     .upload(storagePath, buffer, { contentType: contentType || "application/octet-stream" });

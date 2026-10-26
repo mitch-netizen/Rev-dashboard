@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ingestReportFile } from "@/lib/revenue/ingest";
@@ -40,7 +41,35 @@ function isAuthorized(request: Request): boolean {
   const separatorIndex = decoded.indexOf(":");
   if (separatorIndex === -1) return false;
 
-  return decoded.slice(0, separatorIndex) === expectedUser && decoded.slice(separatorIndex + 1) === expectedPassword;
+  return (
+    sameSecret(decoded.slice(0, separatorIndex), expectedUser) &&
+    sameSecret(decoded.slice(separatorIndex + 1), expectedPassword)
+  );
+}
+
+function sameSecret(given: string, expected: string): boolean {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Postmark caps a whole inbound message at 35 MB; anything bigger isn't from it.
+const MAX_BODY_BYTES = 35 * 1024 * 1024;
+const MAX_ATTACHMENTS = 10;
+
+// Optional comma-separated list of sender addresses or @domains that may
+// email reports in (e.g. "reports@swiftpos.com.au,@rmscloud.com"). Unset
+// means any sender that knows the webhook credentials.
+function senderAllowed(from: string | undefined): boolean {
+  const list = (process.env.INBOUND_EMAIL_ALLOWED_SENDERS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (list.length === 0) return true;
+  const address = (from?.match(/<([^>]+)>/)?.[1] ?? from ?? "").trim().toLowerCase();
+  if (!address.includes("@")) return false;
+  const domain = address.slice(address.lastIndexOf("@"));
+  return list.some((entry) => (entry.startsWith("@") ? entry === domain : entry === address));
 }
 
 // Skips things like inline signature images that ride along on a vendor
@@ -55,8 +84,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = (await request.json()) as InboundPayload;
-  const attachments = (payload.Attachments ?? []).filter(looksLikeReport);
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+  const raw = await request.text();
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
+  let payload: InboundPayload;
+  try {
+    payload = JSON.parse(raw) as InboundPayload;
+  } catch {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  if (!senderAllowed(payload.From)) {
+    console.warn("[inbound-email] rejected sender", payload.From);
+    // 200 so the provider doesn't keep retrying a message we will never accept.
+    return NextResponse.json({ processed: 0, message: "Sender not allowed" });
+  }
+
+  const attachments = (payload.Attachments ?? []).filter(looksLikeReport).slice(0, MAX_ATTACHMENTS);
 
   if (attachments.length === 0) {
     return NextResponse.json({ processed: 0, message: "No report attachments found" });
